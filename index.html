@@ -630,6 +630,10 @@ $('btnDayRep').onclick=()=>reporteDia(activeDate);
 $('btnSync').onclick=()=>syncNow();
 window.addEventListener('online',()=>{updSync();syncNow(true)});
 window.addEventListener('offline',()=>updSync());
+// === Sincronización en tiempo real (polling cada 12s) ===
+// Mientras haya sesión y señal, baja los cambios de otros dispositivos solo.
+setInterval(function(){try{if(state.user&&navigator.onLine&&sbReady()&&!document.hidden&&!syncing)syncNow(true)}catch(e){}},12000);
+document.addEventListener('visibilitychange',function(){try{if(!document.hidden&&state.user&&navigator.onLine&&sbReady())syncNow(true)}catch(e){}});
 // backfill: partes antiguos sin id de sincronización
 var _dirty=false;state.partes.forEach(function(p){if(!p.client_id){p.client_id=uuid();p.synced=false;_dirty=true}else if(p.synced===undefined){p.synced=false;_dirty=true}});if(_dirty)store.set(KP,state.partes);
 
