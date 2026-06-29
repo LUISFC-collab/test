@@ -309,13 +309,9 @@
   <div class="phead"><div class="t"><div class="n">Exportar y sincronizar</div></div><button class="x" data-close="mExp">×</button></div>
   <div class="pbody">
     <div class="expstat"><div class="b"><div class="v tnum" id="eN">0</div><div class="k">partes</div></div><div class="b"><div class="v tnum" id="eNew">0</div><div class="k">nuevas</div></div><div class="b"><div class="v tnum" id="eAv">0%</div><div class="k">avance real</div></div></div>
-    <div class="field"><label>URL del proyecto Supabase</label><input id="supaUrl" placeholder="https://xxxxx.supabase.co"></div>
-    <div class="field"><label>Clave pública (anon key)</label><input id="supaKey" placeholder="eyJhbGciOiJI..."></div>
-    <button class="btn btn-primary" id="eSave">Guardar y sincronizar</button><div style="height:10px"></div>
     <button class="btn btn-ghost" id="eShare">Compartir CSV</button><div style="height:10px"></div>
     <button class="btn btn-ghost" id="eCsv">Descargar CSV</button>
     <div class="hint" id="cfgStatus" style="margin-top:12px"></div>
-    <details><summary>¿Cómo conectar Supabase? (una sola vez)</summary><ol><li>Crea un proyecto gratis en supabase.com.</li><li>En <b>SQL Editor</b>, pega y ejecuta el esquema que te dieron.</li><li>En <b>Project Settings → API</b>, copia la <b>URL</b> y la <b>anon key</b>.</li><li>Pégalas arriba y toca Guardar. Los partes se suben solos al tener señal y todos ven lo mismo.</li></ol></details>
   </div>
 </div></div>
 
@@ -605,13 +601,13 @@ function rowsForExport(){const r=[];acts(state.user.disc).forEach(p=>{const m=me
   partesOf(p.id).forEach(x=>{let acum='',pc='';if(x.tipo==='cant'){const up=partesOf(p.id).filter(z=>z.tipo==='cant'&&z.ts<=x.ts).reduce((a,z)=>a+(+z.cant||0),0);acum=up;pc=m&&m.total>0?Math.min(100,Math.round(up/m.total*100)):''}else pc=x.pctGlb;
     r.push({fecha:x.fecha,disciplina:p.esp,cuadrilla:p.cuadrilla,sistema:p.sistema,id:codeOf(p),partida:p.nombre,unidad:m?m.unidad:'',meta:m?m.total:'',hoy:x.tipo==='cant'?x.cant:'',acumulado:acum,pct:pc,prog:prog,personal:perTxt(x.personal),totalPers:perTot(x.personal),incidencia:x.incidencia,obs:x.obs,reporte:rep,fotos:(x.fotos||[]).length,supervisor:x.supervisor,nueva:p.nueva?'Sí':'No'})})});
   return r.sort((a,b)=>a.fecha<b.fecha?-1:1)}
-$('btnCfg').onclick=()=>{$('eN').textContent=myParts().length;$('eNew').textContent=state.nuevas.filter(p=>p.esp===state.user.disc).length;const pcts=acts(state.user.disc).map(pctOf);$('eAv').textContent=(pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0)+'%';$('supaUrl').value=state.cfg.supaUrl||'';$('supaKey').value=state.cfg.supaKey||'';$('cfgStatus').textContent=sbReady()?('Conectado a Supabase · pendientes por subir: '+pendingCount()):'Aún sin configurar.';openSheet('mExp')};
+$('btnCfg').onclick=()=>{$('eN').textContent=myParts().length;$('eNew').textContent=state.nuevas.filter(p=>p.esp===state.user.disc).length;const pcts=acts(state.user.disc).map(pctOf);$('eAv').textContent=(pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0)+'%';$('cfgStatus').innerHTML=sbReady()?('<span style="color:var(--done);font-weight:800">✓ Conectado a la base de datos</span> · pendientes por subir: '+pendingCount()):'<span style="color:var(--danger);font-weight:700">Sin conexión a la base</span>';openSheet('mExp')};
 function csvFrom(rows){const head=['Fecha','Disciplina','Cuadrilla','Sistema','ID','Partida','Unidad','Meta','Hoy','Acumulado','%','Programado%','Personal','TotalPersonal','Incidencia','Observacion','Reportabilidad','Fotos','Supervisor','Nueva'];const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const L=[head.map(q).join(';')];rows.forEach(r=>L.push([r.fecha,r.disciplina,r.cuadrilla,r.sistema,r.id,r.partida,r.unidad,r.meta,r.hoy,r.acumulado,r.pct,r.prog,r.personal,r.totalPers,r.incidencia,r.obs,r.reporte,r.fotos,r.supervisor,r.nueva].map(q).join(';')));return '\uFEFF'+L.join('\r\n')}
 function buildCSV(){return csvFrom(rowsForExport())}
 function fname(){return 'parte_'+state.user.disc+'_'+todayISO()+'.csv'}
 $('eCsv').onclick=()=>{if(!myParts().length){toast('Aún no hay partes');return}const b=new Blob([buildCSV()],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname();document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('CSV descargado ✓')};
 $('eShare').onclick=async()=>{if(!myParts().length){toast('Aún no hay partes');return}const csv=buildCSV();try{const file=new File([csv],fname(),{type:'text/csv'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Parte de obra'});return}}catch(e){}try{if(navigator.share){await navigator.share({title:'Parte de obra',text:csv});return}}catch(e){}$('eCsv').click()};
-$('eSave').onclick=()=>{const u=$('supaUrl').value.trim(),k=$('supaKey').value.trim();if(!/^https:\/\/.+\.supabase\.co\/?$/.test(u)){toast('URL de Supabase no válida');return}if(k.length<20){toast('Pega la anon key completa');return}state.cfg.supaUrl=u;state.cfg.supaKey=k;store.set(KC,state.cfg);closeSheet('mExp');toast('Guardado ✓');updSync();syncNow()};
+
 
 // ===== Supabase (offline-first) =====
 function uuid(){try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID()}catch(e){}return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8);return v.toString(16)})}
