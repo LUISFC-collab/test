@@ -225,7 +225,7 @@
 #topSync .ti{display:inline-block;font-size:13px;line-height:1;animation:tsspin .9s linear infinite}
 
 </style>
-<script src="config.js?v=20260630a"></script>
+<script src="config.js?v=20260630b"></script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}</script>
 </head>
 <body>
@@ -440,7 +440,7 @@
   <div class="pbody">
     <div class="expstat"><div class="b"><div class="v tnum" id="eN">0</div><div class="k">partes</div></div><div class="b"><div class="v tnum" id="eNew">0</div><div class="k">nuevas</div></div><div class="b"><div class="v tnum" id="eAv">0%</div><div class="k">avance real</div></div></div>
     <button class="btn btn-ghost" id="eShare">Compartir CSV</button><div style="height:10px"></div>
-    <button class="btn btn-ghost" id="eCsv">Descargar CSV</button>
+    <button class="btn btn-ghost" id="eCsv">Descargar CSV</button><button class="btn" type="button" onclick="_debugReset()" style="height:46px;background:#7A1A1A;color:#fff;margin-top:12px;width:100%">🧹 Borrar caché y reiniciar (debug)</button>
     <div class="hint" id="cfgStatus" style="margin-top:12px"></div>
   </div>
 </div></div>
@@ -773,8 +773,9 @@ async function sbSelect(tabla,qs){var url=sbBase()+'/rest/v1/'+tabla+'?'+qs;var 
 async function sbDelete(tabla,qs){var url=sbBase()+'/rest/v1/'+tabla+'?'+qs;var r=await fetch(url,{method:'DELETE',headers:sbHead({'Prefer':'return=minimal'})});if(!r.ok&&r.status!==404)throw new Error('del '+tabla+' '+r.status)}
 function pendingCount(){return state.partes.filter(function(p){return !p.synced}).length}
 /* === FIX anti-pérdida: subir solo lo cambiado + pausar sync al editar === */
-var APP_VER='v20260630a';try{var _av=document.getElementById('appVer');if(_av)_av.textContent='versión '+APP_VER}catch(_e){}
+var APP_VER='v20260630b';try{var _av=document.getElementById('appVer');if(_av)_av.textContent='versión '+APP_VER}catch(_e){}
 function _forceUpdate(){try{if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){try{r.update()}catch(e){}})})}if(window.caches){caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).then(function(){location.reload()});return}}catch(e){}location.reload()}
+function _debugReset(){if(!confirm('DEBUG: Borra la caché y los datos guardados en ESTE teléfono y vuelve a bajar todo del servidor. Úsalo solo si el contador se queda pegado (cambios que no suben). No borra nada del servidor. ¿Continuar?'))return;try{['sgto4_partes','sgto4_nuevas','sgto4_meta','sgto4_repo','sgto4_reinicios','sgto4_edits','sgto4_prog','sgto4_calend','sgto4_storm','sgto4_restot','sgto4_pend','sgto4_delp','sgto4_sent','sgto4_cambios','sgto4_interac','sgto4_progdel'].forEach(function(k){try{localStorage.removeItem(k)}catch(e){}});Object.keys(localStorage).forEach(function(k){if(k.indexOf('sgto4_tomb_')===0){try{localStorage.removeItem(k)}catch(e){}}});}catch(e){}if(typeof _forceUpdate==='function'){_forceUpdate()}else{location.reload()}}
 function _checkVersion(){try{fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){t=(t||'').trim();var b=document.getElementById('updBanner');if(b&&t&&t!==APP_VER){b.style.display='block'}}).catch(function(){})}catch(e){}}
 try{_checkVersion();setInterval(_checkVersion,60000);document.addEventListener('visibilitychange',function(){if(!document.hidden)_checkVersion()})}catch(_e){}
 var SENTKEY='sgto4_sent';var _sent;try{_sent=JSON.parse(localStorage.getItem(SENTKEY)||'{}')}catch(e){_sent={}}
