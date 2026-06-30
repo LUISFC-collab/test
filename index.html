@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F3864">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Parte Obra">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Parte de obra — Water Transition II</title>
 <style>
   :root{--brand:#1F3864;--brand2:#2E5496;--accent:#E8821A;--accent-d:#C76C0C;--bg:#EDF1F7;--card:#FFFFFF;
@@ -211,13 +217,21 @@
   .rp-cover .rp-cover-img{width:100%;max-height:62vh;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:pointer}
   .rp-cover .rp-cov-f{font-size:11px;color:#8A93A3;margin-top:8px}
   @media print{.rp-cover{page-break-after:always;padding-top:6mm}.rp-cover .rp-cover-img{width:100%;max-height:170mm;height:auto;object-fit:cover}.rp-cover .rp-cov-h{font-size:30px}}
+#syncBar{display:none!important}
+.topsync{position:absolute;top:max(6px,env(safe-area-inset-top));right:8px;z-index:80;display:inline-flex;align-items:center;justify-content:center;gap:3px;min-width:24px;height:24px;padding:0 7px;font-size:12px;font-weight:800;border-radius:20px;color:#fff;box-shadow:0 2px 7px rgba(0,0,0,.28);cursor:pointer;transition:opacity .35s,transform .35s;font-variant-numeric:tabular-nums}
+.topsync.busy{background:#E8821A}.topsync.ok{background:#1E9E75}.topsync.off{background:#D8442F}.topsync.unconf{background:#5C6779}
+.topsync.hide{opacity:0;transform:scale(.5);pointer-events:none}
+@keyframes tsspin{to{transform:rotate(360deg)}}
+.topsync .ti{display:inline-block;font-size:13px;line-height:1;animation:tsspin .9s linear infinite}
+
 </style>
 <script src="config.js?v=sp"></script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}</script>
 </head>
 <body>
 <noscript><div style="background:#FCEFD9;color:#1F3864;padding:14px 16px;font-family:system-ui,sans-serif;font-size:14px;text-align:center;font-weight:600">Para usar la app ábrela con un navegador (Chrome o Safari).</div></noscript>
 <div class="phone">
-<div id="topSync" class="topsync off">Conectando…</div>
+<div id="topSync" class="topsync off hide">↻</div>
 <div id="clockWarn" style="display:none;background:#B42318;color:#fff;text-align:center;font-size:12px;padding:6px 10px;font-weight:700">⚠ La fecha/hora de este celular está desfasada. Corrígela en ajustes del teléfono.</div>
   <div id="scrLogin" class="scroll">
     <div class="hero"><div class="eyebrow" id="projName">Water Transition II</div><h2>Parte diario de obra</h2><p>Elige tu disciplina para ver y reportar tus actividades.</p></div>
@@ -762,6 +776,7 @@ function _hashRow(r){var c={};for(var k in r){if(k==='ts')continue;c[k]=r[k]}ret
 function onlyChanged(tabla,rows,keyFn){var out=[];var pend=[];rows.forEach(function(r){var k=tabla+'|'+keyFn(r);var h=_hashRow(r);if(_sent[k]!==h){out.push(r);pend.push([k,h])}});out.__pend=pend;return out}
 function commitSent(rows){if(rows&&rows.__pend&&rows.__pend.length){rows.__pend.forEach(function(p){_sent[p[0]]=p[1]});try{localStorage.setItem(SENTKEY,JSON.stringify(_sent))}catch(e){}}}
 function _editing(){try{return !!document.querySelector('.sheet.open')}catch(e){return false}}
+setTopSync=function(kind,extra){var b=document.getElementById('topSync');if(!b)return;if(b._w!==1){b._w=1;b.onclick=function(){if(typeof syncNow==='function')syncNow()}}var pend=((typeof pendingCount==='function')?pendingCount():0)+((typeof cambiosPendientes==='function')?cambiosPendientes():0);if(b._hideT){clearTimeout(b._hideT);b._hideT=null}if(kind==='unconfig'){b.className='topsync unconf';b.innerHTML='\u2699';b.title='Sin configurar';return}if(kind==='offline'){b.className='topsync off';b.innerHTML='\u26a0'+(pend?(' '+pend):'');b.title='Sin conexion'+(pend?(' - '+pend+' por subir'):'');return}if(kind==='error'){b.className='topsync off';b.innerHTML='\u21bb';b.title='Reintentando';return}if(kind==='pushing'){b.className='topsync busy';b.innerHTML='<span class="ti">\u2191</span>';b.title='Subiendo cambios';return}if(kind==='pulling'){b.className='topsync busy';b.innerHTML='<span class="ti">\u2193</span>';b.title='Recibiendo';return}b.className='topsync ok';b.innerHTML='\u2713';b.title='Al dia';b._hideT=setTimeout(function(){b.classList.add('hide')},2500)};
 var _stormBusy=false;
 function _forgetSent(tabla,id){try{if(_sent[tabla+'|'+id]!==undefined){delete _sent[tabla+'|'+id];localStorage.setItem(SENTKEY,JSON.stringify(_sent))}}catch(e){}}
 async function syncPush(){var proyecto=DATA.proyecto;
