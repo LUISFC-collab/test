@@ -591,12 +591,12 @@ function fmtDM(iso){const p=(iso||'').split('-');return p.length===3?(p[2]+'/'+p
 function leaf(p,num){const s=statusOf(p),m=metaOf(p.id),lp=partesOf(p.id).slice(-1)[0];var refD=activeDate||todayISO();var ayerD=dayBefore(refD);var pct=(refD===todayISO())?pctRawOf(p):pctOfAt(p,refD);var prog=progOfAt(p,refD);var pctR=pct;var sobre=pct>100;
   const inc=lp&&lp.incidencia&&lp.incidencia!=='Ninguna';const nres=nresOf(p);
   var yi=ayerD,pAyer=pctOfAt(p,yi),gAyer=progOfAt(p,yi);
-  let mt='';if(m){mt=m.unidad==='glb'?'Global':(qty(acumCant(p.id))+' / '+qty(m.total)+' '+m.unidad)}var dias=(m&&m.unidad!=='glb'&&m.total>0&&m.rend>0)?Math.ceil(m.total/m.rend):null;
+  let mt='';if(m){mt=m.unidad==='glb'?'Global':(qty(acumCantAt(p.id,refD))+' / '+qty(m.total)+' '+m.unidad)}var dias=(m&&m.unidad!=='glb'&&m.total>0&&m.rend>0)?Math.ceil(m.total/m.rend):null;
   const el=document.createElement('div');el.className='leaf';
   el.innerHTML='<div class="lr"><span class="lnum">'+num+'</span><span class="cid">'+esc(codeOf(p))+'</span><span class="cname">'+esc(p.nombre)+(p.nueva?'<span class="new-badge">nueva</span>':'')+(m?'<span class="cq">'+esc(mt)+(dias?(' · ≈'+dias+'d'):'')+'</span>':'')+(nres?'<span class="res-badge" title="Tiene restricción por levantar">!</span>':'')+(sobre?'<span class="sobre-badge">+'+(pctR-100)+'% sobre</span>':'')+'</span><span class="chip '+s+'">'+lbl(s)+'</span></div>'+
     '<div class="bars2x2">'+
     '<div class="b2"><span class="b2l">Programado</span><span class="b2bar"><i style="width:'+prog+'%;background:var(--brand2)"></i></span><span class="b2v">'+prog+'%</span></div>'+
-    '<div class="b2"><span class="b2l" style="color:var(--danger)">Del día</span><span class="b2bar"><i style="width:'+Math.max(0,pct-pAyer)+'%;background:var(--danger)"></i></span><span class="b2v" style="color:var(--danger)">+'+Math.max(0,pct-pAyer)+'%</span></div>'+
+    '<div class="b2"><span class="b2l" style="color:var(--danger);font-size:10px" title="Avance del '+esc(fmtF(refD))+'">Del '+esc(refD.split('-').reverse().join('/'))+'</span><span class="b2bar"><i style="width:'+Math.max(0,pct-pAyer)+'%;background:var(--danger)"></i></span><span class="b2v" style="color:var(--danger)">+'+Math.max(0,pct-pAyer)+'%</span></div>'+
     '<div class="b2"><span class="b2l">Real</span><span class="b2bar"><i style="width:'+Math.min(100,pctR)+'%;background:'+(sobre?'#7A4B00':barCol(s))+'"></i></span><span class="b2v"'+(sobre?' style="color:#7A4B00"':'')+'>'+pctR+'%</span></div>'+
     '<div class="b2"><span class="b2l" style="font-size:10px" title="Avance hasta '+esc(fmtF(ayerD))+'">'+esc(ayerD.split('-').reverse().join('/'))+'</span><span class="b2bar"><i style="width:'+pAyer+'%;background:#9AA8C0"></i></span><span class="b2v">'+pAyer+'%</span></div>'+
     '</div>'+
