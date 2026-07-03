@@ -858,7 +858,7 @@ async function sbSelect(tabla,qs){var url=sbBase()+'/rest/v1/'+tabla+'?'+qs;var 
 async function sbDelete(tabla,qs){var url=sbBase()+'/rest/v1/'+tabla+'?'+qs;var r=await fetch(url,{method:'DELETE',headers:sbHead({'Prefer':'return=minimal'})});if(!r.ok&&r.status!==404)throw new Error('del '+tabla+' '+r.status)}
 function pendingCount(){return (typeof _pendAll==='function')?_pendAll():state.partes.filter(function(p){return !p.synced}).length}
 /* === FIX anti-pérdida: subir solo lo cambiado + pausar sync al editar === */
-var APP_VER='v20260702-PRUEBA-r8';try{['appVer','appVer2'].forEach(function(_ai){var _av=document.getElementById(_ai);if(_av)_av.textContent='versión '+APP_VER})}catch(_e){}
+var APP_VER='v20260702-PRUEBA-r9';try{['appVer','appVer2'].forEach(function(_ai){var _av=document.getElementById(_ai);if(_av)_av.textContent='versión '+APP_VER})}catch(_e){}
 var _SCRKEY='tst4_lastscr';var _scrSaverOn=false;
 function _visScr(){var ids=['scrList','scrPend','scrProg','scrBita','scrInvDay','scrRestot','scrAdmList','scrDiario'];for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el&&!el.classList.contains('hidden'))return ids[i]}return null}
 function _scrSave(){try{if(!(state&&state.user))return;var v=_visScr();if(!v)return;localStorage.setItem(_SCRKEY,JSON.stringify({id:v,date:(typeof activeDate!=='undefined'&&activeDate)||null}))}catch(e){}}
@@ -987,6 +987,42 @@ toast('✅ '+ns.length+' cambio(s) VALIDADOS y enviados');ns.forEach(function(n)
 }
 paint();
 }
+
+async function _showPermisos(){if(!(typeof esAdmin==='function'&&esAdmin())){toast('Solo el administrador');return}
+var ov=document.getElementById('_pmsOv');if(ov)ov.remove();
+ov=document.createElement('div');ov.id='_pmsOv';ov.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(15,25,45,.55);display:flex;align-items:flex-end;justify-content:center';
+document.body.appendChild(ov);
+function _pmList(){return (state.pend||[]).filter(function(x){return x&&x.tipo==='permiso'&&!x.resuelto})}
+function paint(){
+var list=_pmList();
+var body=list.length?list.map(function(it,ix){var nm=it.supervisor||'';var disc=it.disciplina?(' · '+it.disciplina):'';var cuando=(typeof _cfHora==='function')?_cfHora(it.ts):'';var rr=(state.roles||{})[nm]||{};var yat=(rr.rol&&rr.rol!=='nuevo')?(' · ya tiene rol: '+rr.rol):'';
+return '<div style="display:flex;gap:6px;align-items:center;padding:9px 10px;border-bottom:1px solid #eef2f7;flex-wrap:wrap"><div style="flex:1;min-width:150px"><b style="font-size:13px">'+esc(nm)+'</b><div style="font-size:11px;color:#5C6779">pide acceso para trabajar'+esc(disc)+(cuando?(' · ⏱ '+cuando):'')+esc(yat)+'</div></div><select class="_pmRol" data-i="'+ix+'" style="font-size:12px;padding:6px;border-radius:8px;border:1px solid #D5DBE7"><option value="sup" selected>Supervisor</option><option value="mod">MOD</option><option value="log">Logística</option><option value="admin">ADMIN</option></select><button class="_pmOk" data-i="'+ix+'" style="background:#1E7A46;color:#fff;border:0;border-radius:8px;padding:8px 11px;font-weight:800;font-size:12px">Aceptar</button><button class="_pmNo" data-i="'+ix+'" style="background:#7A1A1A;color:#fff;border:0;border-radius:8px;padding:8px 11px;font-weight:800;font-size:12px">Rechazar</button></div>'}).join(''):'<div style="padding:22px;color:#1E9E75;text-align:center;font-weight:700;font-size:13px">✓ No hay solicitudes de permiso pendientes.</div>';
+ov.innerHTML='<div style="background:#fff;width:100%;max-width:540px;border-radius:16px 16px 0 0;max-height:85vh;display:flex;flex-direction:column"><div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid #eef2f7"><b style="font-size:15px;color:#1F3864">🪪 Permisos ('+list.length+')</b><button id="_pmX" style="margin-left:auto;background:#eef2f7;border:0;border-radius:8px;padding:8px 12px;font-weight:700">Cerrar</button></div><div style="padding:6px 12px 2px;font-size:11px;color:#7d8590">Aceptar da el rol elegido y pide a la persona definir SU contraseña en su próximo ingreso (la verás en 👥 Roles). Rechazar descarta la solicitud; la persona sigue en Solo ver.</div><div style="overflow:auto;flex:1;padding:2px 4px 12px">'+body+'</div></div>';
+var xb=ov.querySelector('#_pmX');if(xb)xb.onclick=function(){ov.remove()};
+ov.onclick=function(e){if(e.target===ov)ov.remove()};
+ov.querySelectorAll('._pmOk').forEach(function(b){b.onclick=function(){var i=+b.getAttribute('data-i');var sel=ov.querySelector('._pmRol[data-i="'+i+'"]');act(i,true,sel?sel.value:'sup')}});
+ov.querySelectorAll('._pmNo').forEach(function(b){b.onclick=function(){act(+b.getAttribute('data-i'),false,null)}});
+}
+async function act(ix,ok,rol){var list=_pmList();var it=list[ix];if(!it)return;var nm=it.supervisor||'';
+if(ok){if(!confirm('¿Aceptar a '+nm+' como '+rol+'?\n\nSe le dará acceso y en su próximo ingreso definirá su contraseña.'))return;
+var fila={nombre:nm,rol:rol,proyecto:DATA.proyecto,quien:(state.user&&state.user.supervisor)||'',ts:(typeof nowSrv==='function'?nowSrv():Date.now()),cell_at:Date.now()};
+try{var rs=await fetch(sbBase()+'/rest/v1/roles_usuarios?on_conflict=nombre',{method:'POST',headers:sbHead({'Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify([fila])});if(!rs.ok)throw new Error('HTTP '+rs.status)}catch(e){toast('No se pudo otorgar (¿sin señal?): '+e.message);return}
+try{state.roles=state.roles||{};state.roles[nm]=Object.assign({},state.roles[nm]||{},{nombre:nm,rol:rol,bloqueado:false})}catch(e){}}
+else{if(!confirm('¿Rechazar la solicitud de '+nm+'? Seguirá en Solo ver.'))return}
+var mine=(state.pend||[]).filter(function(z){return z&&z.tipo==='permiso'&&z.supervisor===nm});var ids=mine.map(function(z){return z.id});
+state.pend=(state.pend||[]).filter(function(z){return ids.indexOf(z.id)<0});
+if(typeof pendSave==='function')pendSave();
+ids.forEach(function(pid){try{if(sbReady()&&navigator.onLine)fetch(sbBase()+'/rest/v1/pendientes?id=eq.'+encodeURIComponent(pid),{method:'DELETE',headers:sbHead({'Prefer':'return=minimal'})})}catch(e){}});
+try{if(typeof logCambio==='function')logCambio('PERMISO',nm,ok?('aceptado como '+rol):'rechazado')}catch(e){}
+try{if(typeof _pullRoles==='function')_pullRoles()}catch(e){}
+try{if(typeof updAdminBox==='function')updAdminBox()}catch(e){}
+toast(ok?('✓ '+nm+' aceptado como '+rol):('Solicitud de '+nm+' rechazada'));
+if(typeof syncNow==='function')syncNow(true);
+paint();
+}
+paint();
+}
+
 async function medirRegiones(){toast('\ud83c\udf0e Midiendo 5 regiones\u2026 (unos 15 s)');
 var R=[['S\u00e3o Paulo sa-east-1 (ACTUAL)','https://s3.sa-east-1.amazonaws.com/'],['Virginia us-east-1','https://s3.us-east-1.amazonaws.com/'],['Ohio us-east-2','https://s3.us-east-2.amazonaws.com/'],['Oreg\u00f3n us-west-2','https://s3.us-west-2.amazonaws.com/'],['Canad\u00e1 ca-central-1','https://s3.ca-central-1.amazonaws.com/']];
 var out=[];
