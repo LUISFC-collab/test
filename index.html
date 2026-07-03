@@ -608,7 +608,7 @@ else if(_r&&_r.pass){var pw2=prompt((_r.rol==='admin'?'Tienes rol de ADMINISTRAD
 else if(_r&&!_r.pass&&_r.rol!=='nuevo'){state.user={disc:selDisc,supervisor:nm};var p1=prompt('\ud83d\udc4b '+nm+', define TU contrase\u00f1a para entrar (m\u00ednimo 4 caracteres):');if(p1!=null&&String(p1).length>=4){var p2=prompt('Rep\u00edtela para confirmar:');if(p1===p2){var hh=await _hashPass(p1);try{await fetch(sbBase()+'/rest/v1/roles_usuarios?on_conflict=nombre',{method:'POST',headers:sbHead({'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify([{nombre:nm,rol:_r.rol||'sup',pass:hh,pass_txt:p1,bloqueado:false,proyecto:DATA.proyecto,quien:nm,ts:(typeof nowSrv==='function'?nowSrv():Date.now()),cell_at:Date.now()}])});toast('\ud83d\udd11 Contrase\u00f1a guardada \u2713');_r.pass=hh;if(_r.rol==='admin')state.user._adminOk=1;_pullRoles()}catch(e){toast('Sin se\u00f1al: entrar\u00e1s sin contrase\u00f1a por ahora')}}else{toast('No coinciden \u2014 la definir\u00e1s la pr\u00f3xima vez')}}else if(p1!=null){toast('Muy corta \u2014 la definir\u00e1s la pr\u00f3xima vez')}}
 else{state.user={disc:selDisc,supervisor:nm};if(window._rolesOn&&!_r){state.user._nuevo=1;try{fetch(sbBase()+'/rest/v1/roles_usuarios',{method:'POST',headers:sbHead({'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify([{nombre:nm,rol:'nuevo',proyecto:DATA.proyecto,quien:nm,ts:(typeof nowSrv==='function'?nowSrv():Date.now()),cell_at:Date.now()}])})}catch(e){}toast('\ud83d\udc4b Usuario NUEVO: solo visualizaci\u00f3n hasta que el admin te asigne un rol')}}
 store.set(KU,state.user);enterApp()};
-function enterApp(){$('scrLogin').classList.add('hidden');showDiario();/* r6: siempre arranca en el MAIN */try{setTimeout(function(){if(typeof miRol==='function'&&miRol()==='nuevo'){var nm=(state.user&&state.user.supervisor)||'';var dup=(state.pend||[]).some(function(x){return x&&x.tipo==='permiso'&&!x.resuelto&&x.supervisor===nm});if(dup){toast('\ud83d\udce8 Tu solicitud ya est\u00e1 enviada \u2014 sigues en Solo Ver hasta que el administrador la acepte')}else if(confirm('\ud83d\udc41 Usted est\u00e1 en modo SOLO VER.\n\n\u00bfDesea solicitar ser SUPERVISOR?')){_pedirPermiso()}}},1600)}catch(e){}}
+function enterApp(){$('scrLogin').classList.add('hidden');showDiario();/* r6: siempre arranca en el MAIN */try{if(typeof _loadCfgObra==='function'){_loadCfgObra().then(function(){try{if(typeof _ensureSnapshotAuto==='function')_ensureSnapshotAuto()}catch(e){}})}}catch(e){}try{if(typeof _btnGanttEnsure==='function')_btnGanttEnsure()}catch(e){}try{setTimeout(function(){if(typeof miRol==='function'&&miRol()==='nuevo'){var nm=(state.user&&state.user.supervisor)||'';var dup=(state.pend||[]).some(function(x){return x&&x.tipo==='permiso'&&!x.resuelto&&x.supervisor===nm});if(dup){toast('\ud83d\udce8 Tu solicitud ya est\u00e1 enviada \u2014 sigues en Solo Ver hasta que el administrador la acepte')}else if(confirm('\ud83d\udc41 Usted est\u00e1 en modo SOLO VER.\n\n\u00bfDesea solicitar ser SUPERVISOR?')){_pedirPermiso()}}},1600)}catch(e){}}
 function showDiario(){$('scrList').classList.add('hidden');$('scrDiario').classList.remove('hidden');$('dProj').textContent='MAIN · '+DATA.proyecto.split('·')[0].trim();$('dProj').style.cursor='pointer';$('dProj').title='Cerrar sesión / cambiar usuario';$('dProj').onclick=function(){if(!confirm('¿Cerrar sesión y cambiar de usuario?'))return;$('scrList').classList.add('hidden');$('scrDiario').classList.add('hidden');$('scrLogin').classList.remove('hidden');selDisc=state.user?state.user.disc:null;$('inSup').value=state.user?state.user.supervisor:'';buildDisc();chkEnter()};$('dDiscTxt').textContent=state.user.disc;$('dSup').textContent=state.user.supervisor;try{if(state._supMode===undefined)state._supMode=((typeof localStorage!=='undefined'&&localStorage.getItem('tst4_supmode'))==='1')}catch(e){}try{_updModeBtn()}catch(e){}buildDiscMenu();renderDiario();updAdminBox();updSync();syncNow(true);}
 function buildDiscMenu(){const m=$('discMenu');if(!m)return;m.innerHTML='';DISC.forEach(d=>{const n=DATA.partidas.filter(p=>p.esp===d).length;const it=document.createElement('button');it.type='button';it.style.cssText='display:flex;width:100%;align-items:center;gap:10px;padding:11px 14px;background:'+(d===state.user.disc?'#EEF2FB':'#fff')+';border:none;border-bottom:1px solid var(--line);cursor:pointer;text-align:left';it.innerHTML='<span style="width:20px;height:20px;color:var(--brand2)">'+discIcon[d]+'</span><span style="font-weight:700;color:var(--brand);font-size:15px">'+d+'</span><span style="margin-left:auto;font-size:12px;color:var(--muted)">'+n+'</span>';it.onclick=(e)=>{e.stopPropagation();changeDisc(d)};m.appendChild(it)})}
 function changeDisc(d){if(typeof esAdmin==='function'&&!esAdmin()&&d!==state.user.disc){toast('Solo tu especialidad: '+((state.user&&state.user.disc)||''));var _mm=$('discMenu');if(_mm)_mm.classList.add('hidden');return}if(d!==state.user.disc){state.user.disc=d;selDisc=d;store.set(KU,state.user)}$('discMenu').classList.add('hidden');showDiario()}
@@ -626,7 +626,7 @@ function renderDiario(){try{var _bp=$('btnProg');if(_bp&&state.user&&state.user.
     card.innerHTML='<div class="wbs-head"><div class="wbs-tt"><div class="nm">'+fmtF(f)+(isT?' · <span style="color:var(--green);font-weight:800">Hoy</span>':'')+'</div><div class="mt">'+(nAct?(nAct+(nAct>1?' actividades reportadas':' actividad reportada')):'Toca para registrar')+'</div></div><span class="chip '+sm[1]+'">'+sm[0]+'</span></div>';
     if(typeof esAdmin==='function'&&esAdmin()&&!isT){var _ck=document.createElement('label');_ck.style.cssText='display:flex;align-items:center;gap:7px;padding:2px 12px 10px;font-size:12px;color:var(--muted);cursor:pointer';_ck.innerHTML='<input type="checkbox" style="width:16px;height:16px" '+((state.diasOpen&&state.diasOpen[f])?'checked':'')+'><span>Habilitar escritura de supervisores este día</span>';_ck.onclick=function(e){e.stopPropagation()};_ck.querySelector('input').onchange=function(){setDiaOpen(f,this.checked)};card.appendChild(_ck);}
     if(nAct){const act=document.createElement('div');act.style.cssText='display:flex;gap:8px;padding:0 12px 12px';
-      act.innerHTML='<button class="btn btn-ghost dprev" style="height:42px;font-size:14px;flex:1">👁 Previsualizar</button><button class="btn btn-ghost dpdfx" style="height:42px;font-size:14px;flex:1;color:#7A1A1A">📽 PDF</button>';
+      act.innerHTML='<button class="btn btn-ghost dprev" style="height:42px;font-size:14px;flex:1">👁 Detalle del día</button><button class="btn btn-ghost dpdfx" style="height:42px;font-size:14px;flex:1;color:#7A1A1A">📽 PDF</button>';
       card.appendChild(act);
       act.querySelector('.dprev').onclick=function(e){e.stopPropagation();prevDia(f);};
       act.querySelector('.dpdfx').onclick=function(e){e.stopPropagation();pdfDiaSlides(f);};}
@@ -858,7 +858,7 @@ async function sbSelect(tabla,qs){var url=sbBase()+'/rest/v1/'+tabla+'?'+qs;var 
 async function sbDelete(tabla,qs){var url=sbBase()+'/rest/v1/'+tabla+'?'+qs;var r=await fetch(url,{method:'DELETE',headers:sbHead({'Prefer':'return=minimal'})});if(!r.ok&&r.status!==404)throw new Error('del '+tabla+' '+r.status)}
 function pendingCount(){return (typeof _pendAll==='function')?_pendAll():state.partes.filter(function(p){return !p.synced}).length}
 /* === FIX anti-pérdida: subir solo lo cambiado + pausar sync al editar === */
-var APP_VER='v20260702-PRUEBA-r9';try{['appVer','appVer2'].forEach(function(_ai){var _av=document.getElementById(_ai);if(_av)_av.textContent='versión '+APP_VER})}catch(_e){}
+var APP_VER='v20260703-PRUEBA-r10';try{['appVer','appVer2'].forEach(function(_ai){var _av=document.getElementById(_ai);if(_av)_av.textContent='versión '+APP_VER})}catch(_e){}
 var _SCRKEY='tst4_lastscr';var _scrSaverOn=false;
 function _visScr(){var ids=['scrList','scrPend','scrProg','scrBita','scrInvDay','scrRestot','scrAdmList','scrDiario'];for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el&&!el.classList.contains('hidden'))return ids[i]}return null}
 function _scrSave(){try{if(!(state&&state.user))return;var v=_visScr();if(!v)return;localStorage.setItem(_SCRKEY,JSON.stringify({id:v,date:(typeof activeDate!=='undefined'&&activeDate)||null}))}catch(e){}}
@@ -1023,6 +1023,891 @@ paint();
 paint();
 }
 
+
+/* ============ UPD-09 · Cronograma + Gantt semanal (Programado vs Real) — inicio ============ */
+/* =====================================================================
+ * UPD-09 · MÓDULO A1 — CAPA DE DATOS + BASE DE DATOS  (build/mod_datos.js)
+ * ---------------------------------------------------------------------
+ * Implementa el CONTRATO_INTERFACES.md §2 (modelo de semana) y §3 (API de datos).
+ * TODO son funciones top-level (function / async function). Prefijo global "_sem/_cfgObra/_cortar/_razon".
+ * Consume helpers YA existentes en index.html (NO los redefine): esc, toast, sbBase, sbHead,
+ *   sbSelect, sbUpsert, nowSrv, sbReady, logCambio, uuid, todayISO, DATA, DATA._byId,
+ *   codeOf, metaOf, acumCantAt, pctOfAt, state.prog, store, esAdmin.
+ * Offline-first + LWW/realtime: escribe primero a state/localStorage (tst4_*) y sincroniza por REST;
+ *   app_config y las tablas nuevas NO están en el set _UAT de sbUpsert -> se manda updated_at EXPLÍCITO.
+ * semana_id = fecha ISO 'YYYY-MM-DD' del INICIO de semana (contrato §2). Semana = [ini .. ini+6].
+ * ===================================================================== */
+
+/* ---- utilidades locales de fecha (no dependen de helpers de la app) ---- */
+/* Parsea Date|'YYYY-MM-DD' a Date local a mediodía (evita saltos por zona horaria). */
+function _semToDate(x){ if(x instanceof Date) return new Date(x.getFullYear(),x.getMonth(),x.getDate(),12,0,0); var s=String(x||'').slice(0,10); var a=s.split('-'); return new Date(+a[0],(+a[1]||1)-1,(+a[2]||1),12,0,0); }
+/* Formatea un Date a 'YYYY-MM-DD' (local). */
+function _semISO(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+/* Suma n días a un ISO/Date y devuelve ISO. */
+function _semAddDays(x,n){ var d=_semToDate(x); d.setDate(d.getDate()+n); return _semISO(d); }
+/* ISO de HOY usando todayISO() de la app si existe, si no reloj local. */
+function _semTodayISO(){ try{ if(typeof todayISO==='function') return todayISO(); }catch(e){} return _semISO(new Date()); }
+
+/* ---- §3 estado espejo de la config de obra (mirror local tst4_cfgobra) ---- */
+/* state.cfgObra = { dia_corte:int|null, semana_actual:string|null } (espejo de app_config id=1). */
+(function _initCfgObra(){ try{ if(typeof state==='undefined'||!state) return; if(!state.cfgObra){ var m=null; try{ m=(typeof store!=='undefined'&&store)?store.get('tst4_cfgobra'):null; }catch(e){} state.cfgObra=m||{dia_corte:null,semana_actual:null}; } }catch(e){} })();
+
+/* Persiste state.cfgObra en el mirror local tst4_cfgobra. */
+function _cfgObraSaveLocal(){ try{ if(typeof store!=='undefined'&&store) store.set('tst4_cfgobra', state.cfgObra||{dia_corte:null,semana_actual:null}); }catch(e){} }
+
+/* §2 · weekStartDow = (dia_corte + 1) % 7 ; default dia_corte=6 (Sáb) -> 0 (Dom). */
+function _weekStartDow(){ var D=null; try{ D=state&&state.cfgObra?state.cfgObra.dia_corte:null; }catch(e){} if(D===null||D===undefined||isNaN(+D)) D=6; return (((+D)+1)%7+7)%7; }
+
+/* §2 · límites de la semana que contiene 'ancla': retrocede al weekStartDow más reciente <= ancla. */
+function _semBounds(ancla){ var d=_semToDate(ancla||_semTodayISO()); var wsd=_weekStartDow(); var back=((d.getDay()-wsd)%7+7)%7; var ini=_semToDate(_semAddDays(d,-back)); var iniISO=_semISO(ini); var finISO=_semAddDays(iniISO,6); var dias=[]; for(var i=0;i<7;i++) dias.push(_semAddDays(iniISO,i)); return { id:iniISO, ini:iniISO, fin:finISO, dias:dias }; }
+
+/* §2 · semana ACTUAL: la de HOY, salvo que el admin haya fijado state.cfgObra.semana_actual. */
+function _semActual(){ var fijada=null; try{ fijada=state&&state.cfgObra?state.cfgObra.semana_actual:null; }catch(e){} if(fijada) return _semBounds(fijada); return _semBounds(_semTodayISO()); }
+
+/* §2 · lista de nDetras semanas recientes (incluye la actual) para selectores. */
+function _semList(nDetras){ var n=(nDetras==null?8:+nDetras); var base=_semActual(); var out=[]; for(var i=0;i<=n;i++){ var iniISO=_semAddDays(base.ini,-7*i); var b=_semBounds(iniISO); out.push({ id:b.id, ini:b.ini, fin:b.fin }); } return out; }
+
+/* ---- §3 · CONFIG DE OBRA (app_config singleton id=1) ---- */
+/* Lee app_config?id=eq.1 y llena state.cfgObra (dia_corte, semana_actual). Best-effort offline. */
+async function _loadCfgObra(){ try{ if(typeof sbReady==='function'&&sbReady()&&(typeof navigator==='undefined'||navigator.onLine)){ var r=await sbSelect('app_config','select=dia_corte,semana_actual&id=eq.1'); if(r&&r[0]){ state.cfgObra=state.cfgObra||{}; state.cfgObra.dia_corte=(r[0].dia_corte==null?null:Number(r[0].dia_corte)); state.cfgObra.semana_actual=(r[0].semana_actual==null?null:String(r[0].semana_actual)); _cfgObraSaveLocal(); } } }catch(e){} return state.cfgObra; }
+
+/* Upsert de config de obra a app_config (id=1) con updated_at EXPLÍCITO (no está en _UAT). Gating admin. */
+async function _saveCfgObra(cfg){ cfg=cfg||{}; state.cfgObra=state.cfgObra||{dia_corte:null,semana_actual:null}; if('dia_corte' in cfg) state.cfgObra.dia_corte=(cfg.dia_corte==null?null:Number(cfg.dia_corte)); if('semana_actual' in cfg) state.cfgObra.semana_actual=(cfg.semana_actual==null?null:String(cfg.semana_actual)); _cfgObraSaveLocal(); var ts=(typeof nowSrv==='function'?nowSrv():Date.now()); var row={ id:1, dia_corte:state.cfgObra.dia_corte, semana_actual:state.cfgObra.semana_actual, quien:(state.user&&state.user.supervisor)||'', ts:ts, cell_at:Date.now(), updated_at:new Date(ts).toISOString() }; try{ if(typeof sbReady==='function'&&sbReady()&&(typeof navigator==='undefined'||navigator.onLine)) await sbUpsert('app_config',[row],'id'); }catch(e){} try{ if(typeof logCambio==='function') logCambio('CONFIG','app_config','dia_corte='+state.cfgObra.dia_corte+' semana_actual='+state.cfgObra.semana_actual); }catch(e){} return state.cfgObra; }
+
+/* ---- §3 · CORTE = snapshot congelado (insert-once) de TODAS las especialidades ---- */
+/* Congela state.prog[id] de todas las especialidades en prog_semana(semana_id). Idempotente (no duplica). */
+async function _cortarSemana(semana_id, opts){ opts=opts||{}; var force=!!opts.force; var quien=opts.quien||(state.user&&state.user.supervisor)||''; var b=_semBounds(semana_id||_semActual().id); var wid=b.id; var proj=(typeof DATA!=='undefined'&&DATA)?DATA.proyecto:''; var online=(typeof sbReady==='function'&&sbReady()&&(typeof navigator==='undefined'||navigator.onLine));
+  /* insert-once: si ya hay filas para esa semana y !force, no re-genera */
+  if(online && !force){ try{ var ex=await sbSelect('prog_semana','select=partida_id&proyecto=eq.'+encodeURIComponent(proj)+'&semana_id=eq.'+encodeURIComponent(wid)+'&limit=1'); if(ex&&ex.length){ await _marcarSemanaCortada(wid,b,quien); return { creadas:0, semana_id:wid, yaExistia:true }; } }catch(e){} }
+  var ts=(typeof nowSrv==='function'?nowSrv():Date.now()); var cell=Date.now(); var rows=[]; var prog=(state&&state.prog)||{}; var orden=0;
+  Object.keys(prog).forEach(function(id){ var pr=prog[id]; if(!pr) return; if(state.progDel&&state.progDel[id]) return; /* respeta tombstones del cronograma vivo */ var bp=(typeof DATA!=='undefined'&&DATA._byId)?DATA._byId[id]:null; var esp=bp?bp.esp:(pr.disc||''); var m=null; try{ m=(typeof metaOf==='function')?metaOf(id):null; }catch(e){} var cod=''; try{ cod=(typeof codeOf==='function')?codeOf(bp||{id:id,codigo:pr.codigo}):(pr.codigo||id); }catch(e){ cod=pr.codigo||id; } rows.push({ proyecto:proj, semana_id:wid, partida_id:id, especialidad:esp, codigo:cod, partida_nombre:(pr.nombre||(bp?bp.nombre:'')||''), start_plan:(pr.start||null), dias_plan:(pr.dias!=null?Number(pr.dias):null), meta_plan:(m&&m.total!=null?Number(m.total):null), unidad:(m?(m.unidad||''):''), orden:(pr.orden!=null?Number(pr.orden):orden), corte_ts:ts, quien:quien, ts:ts, cell_at:cell, updated_at:new Date(ts).toISOString() }); orden++; });
+  if(!rows.length){ if(online) await _marcarSemanaCortada(wid,b,quien); return { creadas:0, semana_id:wid, vacio:true }; }
+  /* escritura insert-once: raw fetch con Prefer resolution=ignore-duplicates (NO merge). */
+  if(online){ try{ var url=sbBase()+'/rest/v1/prog_semana?on_conflict=proyecto,semana_id,partida_id'; var r=await fetch(url,{ method:'POST', headers:sbHead({'Prefer':'resolution=ignore-duplicates,return=minimal'}), body:JSON.stringify(rows) }); if(!r.ok && r.status!==409) throw new Error('prog_semana '+r.status); }catch(e){ if(typeof toast==='function') toast('Corte: sin señal, se reintentará'); } await _marcarSemanaCortada(wid,b,quien); }
+  try{ if(typeof logCambio==='function') logCambio('CORTE','prog_semana '+wid, rows.length+' filas'); }catch(e){}
+  return { creadas:rows.length, semana_id:wid };
+}
+
+/* Marca semanas.estado='cortada' (upsert con updated_at explícito). */
+async function _marcarSemanaCortada(wid,b,quien){ try{ if(!(typeof sbReady==='function'&&sbReady()&&(typeof navigator==='undefined'||navigator.onLine))) return; var ts=(typeof nowSrv==='function'?nowSrv():Date.now()); var proj=(typeof DATA!=='undefined'&&DATA)?DATA.proyecto:''; await sbUpsert('semanas',[{ proyecto:proj, semana_id:wid, ini:b.ini, fin:b.fin, dia_corte:(state&&state.cfgObra?state.cfgObra.dia_corte:null), estado:'cortada', quien:quien||'', ts:ts, cell_at:Date.now(), updated_at:new Date(ts).toISOString() }],'proyecto,semana_id'); }catch(e){} }
+
+/* §3 · disparo AUTOMÁTICO idempotente: en cada carga, si HOY>=inicio de la semana activa y su snapshot está vacío, corta. */
+async function _ensureSnapshotAuto(){ try{ if(!(typeof sbReady==='function'&&sbReady()&&(typeof navigator==='undefined'||navigator.onLine))) return { corrio:false, motivo:'offline' }; var b=_semActual(); if(_semTodayISO() < b.ini) return { corrio:false, motivo:'antes-de-inicio' }; var proj=(typeof DATA!=='undefined'&&DATA)?DATA.proyecto:''; var ex=await sbSelect('prog_semana','select=partida_id&proyecto=eq.'+encodeURIComponent(proj)+'&semana_id=eq.'+encodeURIComponent(b.id)+'&limit=1'); if(ex&&ex.length) return { corrio:false, motivo:'ya-existe' }; var res=await _cortarSemana(b.id,{force:false,quien:'auto'}); return { corrio:true, creadas:res.creadas, semana_id:b.id }; }catch(e){ return { corrio:false, motivo:'error' }; } }
+
+/* ---- §3 · lectura del snapshot programado ---- */
+/* Devuelve filas de prog_semana de una semana (filtra por especialidad si 'esp'). Ordenadas por orden. */
+async function _progSemana(semana_id, esp){ var proj=(typeof DATA!=='undefined'&&DATA)?DATA.proyecto:''; var wid=_semBounds(semana_id||_semActual().id).id; var qs='select=*&proyecto=eq.'+encodeURIComponent(proj)+'&semana_id=eq.'+encodeURIComponent(wid)+(esp?('&especialidad=eq.'+encodeURIComponent(esp)):'')+'&order=orden'; try{ if(typeof sbReady==='function'&&sbReady()&&(typeof navigator==='undefined'||navigator.onLine)) return (await sbSelect('prog_semana',qs))||[]; }catch(e){} return []; }
+
+/* ---- §3 · avance REAL de la semana (SÍNCRONO: usa partes ya cargados en state via acumCantAt/pctOfAt) ---- */
+/* Deriva de partes el avance de la semana de una partida: cantSem, pctAcum al fin, días con avance y cantidad por día. */
+function _realSemana(partida_id, bounds){ var b=bounds&&bounds.dias?bounds:_semBounds(bounds||_semActual().id); var id=partida_id; var p=(typeof DATA!=='undefined'&&DATA._byId)?DATA._byId[id]:{id:id}; if(!p) p={id:id}; var acAntes=0, acIni=0; try{ acAntes=(typeof acumCantAt==='function')?acumCantAt(id,_semAddDays(b.ini,-1)):0; }catch(e){} var acFin=0; try{ acFin=(typeof acumCantAt==='function')?acumCantAt(id,b.fin):0; }catch(e){} var cantSem=Math.round((acFin-acAntes)*1000)/1000; if(cantSem<0) cantSem=0; var pctAcum=0; try{ pctAcum=(typeof pctOfAt==='function')?pctOfAt(p,b.fin):0; }catch(e){} var porDia={}, diasAvance=[]; var prev=acAntes; for(var i=0;i<b.dias.length;i++){ var iso=b.dias[i]; var acHoy=acAntes; try{ acHoy=(typeof acumCantAt==='function')?acumCantAt(id,iso):acAntes; }catch(e){} var delta=Math.round((acHoy-prev)*1000)/1000; if(delta>0){ porDia[iso]=delta; diasAvance.push(iso); } prev=acHoy; }
+  /* fallback glb: si la meta es global (sin 'cant'), marca días con parte glb dentro de la semana */
+  if(!diasAvance.length){ try{ var m=(typeof metaOf==='function')?metaOf(id):null; if(m&&m.unidad==='glb'&&typeof partesOf==='function'){ partesOf(id).filter(function(x){return x.tipo==='glb'&&x.fecha>=b.ini&&x.fecha<=b.fin;}).forEach(function(x){ if(diasAvance.indexOf(x.fecha)<0) diasAvance.push(x.fecha); porDia[x.fecha]=(x.pctGlb||0); }); } }catch(e){} }
+  return { cantSem:cantSem, pctAcum:pctAcum, diasAvance:diasAvance, porDia:porDia }; }
+
+/* ---- §3 · NO PLANIFICADAS: avance real en la semana sin fila en prog_semana ---- */
+/* Devuelve partida_id con avance>0 en [ini..fin] y especialidad 'esp' que NO están en el snapshot. */
+async function _noPlanificadas(semana_id, esp, bounds){ var b=(bounds&&bounds.dias)?bounds:_semBounds(semana_id||_semActual().id); var wid=b.id; var planSet={}; (await _progSemana(wid,esp)).forEach(function(r){ planSet[r.partida_id]=1; }); var out=[]; var partidas=(typeof DATA!=='undefined'&&DATA.partidas)?DATA.partidas:[]; var vistos={}; partidas.forEach(function(p){ if(esp && p.esp!==esp) return; if(planSet[p.id]) return; if(vistos[p.id]) return; var r=_realSemana(p.id,b); if(r.cantSem>0 || (r.diasAvance&&r.diasAvance.length)){ vistos[p.id]=1; out.push(p.id); } }); return out; }
+
+/* ---- §3 · RAZONES de no-avance (una por actividad×semana; fecha = ini de la semana) ---- */
+/* Lee el texto de la razón de (semana, partida); '' si no hay. */
+async function _razonGet(semana_id, partida_id){ var b=_semBounds(semana_id||_semActual().id); var proj=(typeof DATA!=='undefined'&&DATA)?DATA.proyecto:''; try{ if(typeof sbReady==='function'&&sbReady()&&(typeof navigator==='undefined'||navigator.onLine)){ var qs='select=texto&proyecto=eq.'+encodeURIComponent(proj)+'&semana_id=eq.'+encodeURIComponent(b.id)+'&partida_id=eq.'+encodeURIComponent(partida_id)+'&fecha=eq.'+encodeURIComponent(b.ini)+'&limit=1'; var r=await sbSelect('razones_noavance',qs); if(r&&r[0]&&r[0].texto!=null) return String(r[0].texto); } }catch(e){} return ''; }
+
+/* Upsert de la razón (semana, partida) con updated_at explícito; fecha = ini de la semana. */
+async function _razonSet(semana_id, partida_id, texto, quien){ var b=_semBounds(semana_id||_semActual().id); var proj=(typeof DATA!=='undefined'&&DATA)?DATA.proyecto:''; var bp=(typeof DATA!=='undefined'&&DATA._byId)?DATA._byId[partida_id]:null; var esp=bp?bp.esp:''; var ts=(typeof nowSrv==='function'?nowSrv():Date.now()); var row={ proyecto:proj, semana_id:b.id, partida_id:partida_id, fecha:b.ini, especialidad:esp, texto:String(texto==null?'':texto), quien:quien||(state.user&&state.user.supervisor)||'', ts:ts, cell_at:Date.now(), updated_at:new Date(ts).toISOString() }; try{ if(typeof sbReady==='function'&&sbReady()&&(typeof navigator==='undefined'||navigator.onLine)) await sbUpsert('razones_noavance',[row],'proyecto,semana_id,partida_id,fecha'); }catch(e){} try{ if(typeof logCambio==='function') logCambio('RAZON', partida_id, 'sem='+b.id+' '+(texto?('"'+String(texto).slice(0,60)+'"'):'(vacío)')); }catch(e){} return true; }
+
+/* ---- §3 (REWORK) · METAS SEMANALES MANUALES (%) — una por actividad×semana, EDITABLE ---- */
+/* Lee el % meta MANUAL de (semana, partida) desde metas_semana; number si existe, null si no hay meta fijada. */
+async function _metaSemGet(sem, pid){ var b=_semBounds(sem||_semActual().id); var proj=(typeof DATA!=='undefined'&&DATA)?DATA.proyecto:''; try{ if(typeof sbReady==='function'&&sbReady()&&(typeof navigator==='undefined'||navigator.onLine)){ var qs='select=meta_pct&proyecto=eq.'+encodeURIComponent(proj)+'&semana_id=eq.'+encodeURIComponent(b.id)+'&partida_id=eq.'+encodeURIComponent(pid)+'&limit=1'; var r=await sbSelect('metas_semana',qs); if(r&&r[0]&&r[0].meta_pct!=null && r[0].meta_pct!=='') return Number(r[0].meta_pct); } }catch(e){} return null; }
+
+/* Upsert del % meta MANUAL (semana, partida) con updated_at explícito (EDITABLE, keep_newest/LWW). pct null/'' borra el objetivo. */
+async function _metaSemSet(sem, pid, pct, quien){ var b=_semBounds(sem||_semActual().id); var proj=(typeof DATA!=='undefined'&&DATA)?DATA.proyecto:''; var val=(pct==null||pct==='')?null:Math.max(0,Math.min(100,Number(pct))); if(val!=null&&isNaN(val)) val=null; var ts=(typeof nowSrv==='function'?nowSrv():Date.now()); var row={ proyecto:proj, semana_id:b.id, partida_id:pid, meta_pct:val, quien:quien||(state.user&&state.user.supervisor)||'', ts:ts, cell_at:Date.now(), updated_at:new Date(ts).toISOString() }; try{ if(typeof sbReady==='function'&&sbReady()&&(typeof navigator==='undefined'||navigator.onLine)) await sbUpsert('metas_semana',[row],'proyecto,semana_id,partida_id'); }catch(e){} try{ if(typeof logCambio==='function') logCambio('META_SEM', pid, 'sem='+b.id+' meta='+(val==null?'(sin meta)':(val+'%'))); }catch(e){} return true; }
+
+/* ---- §5 (REWORK) · SPEC de tablas para realtime (_rtInit del index): 22 -> 23, se AÑADE 'metas_semana' ---- */
+/* Lista literal de las tablas nuevas de UPD-09 que deben añadirse a _rtInit()/la campana supabase_realtime. */
+var _UPD09_RT_TABLAS = ['semanas','prog_semana','razones_noavance','avance_semana','metas_semana'];
+try{ if(typeof window!=='undefined') window._UPD09_RT_TABLAS = _UPD09_RT_TABLAS; }catch(e){}
+
+/* ---- Export para tests node (no afecta al navegador) ---- */
+if (typeof module!=='undefined' && module.exports){ module.exports = { _weekStartDow,_semBounds,_semActual,_semList,_loadCfgObra,_saveCfgObra,_cortarSemana,_ensureSnapshotAuto,_progSemana,_realSemana,_noPlanificadas,_razonGet,_razonSet,_metaSemGet,_metaSemSet,_UPD09_RT_TABLAS,_semToDate,_semISO,_semAddDays,_semTodayISO,_marcarSemanaCortada,_cfgObraSaveLocal }; }
+
+/* =====================================================================
+ * UPD-09 - MODULO A2 - PANEL DE ADMIN + CONFIG SEMANAL  (build/mod_admin.js)
+ * ---------------------------------------------------------------------
+ * Implementa CONTRATO_INTERFACES.md 5 (A2). TODO funciones top-level.
+ * Prefijo global "_cfg / _adminCorte / _onBtnCorte / _showConfigSemana".
+ * CONSUME de A1 (NO reimplementa): _saveCfgObra({dia_corte,semana_actual}),
+ *   _semList(n), _semActual(), _cortarSemana(semana_id,{force,quien}), state.cfgObra.
+ * CONSUME helpers de index.html (NO redefine): esAdmin, toast, esc, confirm,
+ *   logCambio, $, state. Entre-modulos siempre con guarda `typeof`.
+ * UX: clona el patron VALIDAR de _showRoles (overlay inset:0, hoja blanca
+ *   16px 16px 0 0, dirty+confirm, boton verde #1E7A46 / gris #B9C2CF). El boton
+ *   #btnCorte reusa el estilo de #btnPermisos (molde de revelado: btnAprobar).
+ * Dia de corte (contrato 2): 0=Dom..6=Sab; default 6 (Sabado).
+ * ===================================================================== */
+
+/* etiquetas de dia por getDay() 0=Dom..6=Sab (idem index.html @534) */
+function _cfgDIAS(){ return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']; }
+function _cfgDIASLARGO(){ return ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']; }
+var _CFG_CORTE_DEFAULT = 6;  /* default Sabado (contrato 0.3 / 2) */
+
+function _cfgObraGet(){ try{ return (typeof state!=='undefined'&&state&&state.cfgObra)?state.cfgObra:{}; }catch(e){ return {}; } }
+/* dia de corte de config (null si sin definir; el modal cae al default para pintar) */
+function _cfgCorteActual(){ var c=_cfgObraGet(); var d=(c&&c.dia_corte); if(d===null||d===undefined||isNaN(+d)) return null; return (((+d)%7)+7)%7; }
+function _cfgEsc(s){ try{ if(typeof esc==='function') return esc(s); }catch(e){} return String(s==null?'':s).replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];}); }
+function _cfgToast(m){ try{ if(typeof toast==='function'){ toast(m); return; } }catch(e){} }
+function _cfgConfirm(m){ try{ if(typeof confirm==='function') return confirm(m); }catch(e){} return true; }
+
+/* =====================================================================
+ * _showConfigSemana() - modal admin: dia de corte (7 chips) + semana actual
+ * + Guardar cambios (VALIDAR)->_saveCfgObra + Cerrar semana ahora
+ * ->_cortarSemana(_semActual().id,{force:false}). Gating esAdmin().
+ * ===================================================================== */
+function _showConfigSemana(){
+  if(!(typeof esAdmin==='function'&&esAdmin())){ _cfgToast('Solo el administrador'); return; }
+  var doc=(typeof document!=='undefined')?document:null; if(!doc) return;
+  var ov=doc.getElementById('_cfgOv'); if(ov) ov.remove();
+  ov=doc.createElement('div'); ov.id='_cfgOv';
+  ov.style.cssText='position:fixed;inset:0;z-index:2147483600;background:rgba(15,25,45,.55);display:flex;align-items:flex-end;justify-content:center';
+  doc.body.appendChild(ov);
+
+  var dirty={};   /* claves posibles: dia_corte, semana_actual (nada se aplica hasta VALIDAR) */
+  /* dia que se PINTA con check: 1) dirty, 2) config guardada, 3) default Sab=6 (brief A2). */
+  function efectivoCorteExplicito(){ return ('dia_corte' in dirty) ? dirty.dia_corte : _cfgCorteActual(); }
+  function efectivoCorte(){ var v=efectivoCorteExplicito(); return (v===null||v===undefined)?_CFG_CORTE_DEFAULT:v; }
+  function efectivoSemana(){ var c=_cfgObraGet(); return ('semana_actual' in dirty) ? dirty.semana_actual : (c&&c.semana_actual)||''; }
+
+  var semanas=[]; try{ if(typeof _semList==='function') semanas=_semList(8)||[]; }catch(e){ semanas=[]; }
+  var actual=null; try{ if(typeof _semActual==='function') actual=_semActual(); }catch(e){ actual=null; }
+  function _pushSem(id){ if(!id) return; for(var i=0;i<semanas.length;i++){ if(semanas[i]&&semanas[i].id===id) return; } semanas.unshift({id:id,ini:'',fin:''}); }
+  _pushSem(efectivoSemana()); if(actual&&actual.id) _pushSem(actual.id);
+  function rangoDe(id){ for(var i=0;i<semanas.length;i++){ if(semanas[i]&&semanas[i].id===id){ var s=semanas[i]; return (s.ini&&s.fin)?(s.ini+' -> '+s.fin):''; } } return ''; }
+
+  function paint(){
+    var DIAS=_cfgDIAS(); var LARGO=_cfgDIASLARGO();
+    var sel=efectivoCorte();                 /* 0..6 (nunca null: cae al default Sab=6) */
+    var explicito=efectivoCorteExplicito();  /* null si el admin aun no lo definio */
+    var nD=Object.keys(dirty).length;
+    var ordenVis=[1,2,3,4,5,6,0];            /* Lun..Dom visual; data-d = indice getDay() */
+    var chips=ordenVis.map(function(d){
+      var on=(sel===d);
+      return '<button type="button" class="_cfgDia" data-d="'+d+'" '
+        +'style="flex:1;min-width:58px;padding:11px 4px;border-radius:10px;'
+        +'border:2px solid '+(on?'#0F5E5A':'#D5DBE7')+';background:'+(on?'#0F5E5A':'#fff')+';'
+        +'color:'+(on?'#fff':'#1F3864')+';font-weight:800;font-size:13px;cursor:pointer">'
+        +DIAS[d]+(on?' ✓':'')+'</button>';
+    }).join('');
+
+    var semSel=efectivoSemana();
+    var opts=semanas.map(function(s){
+      var etiqueta=s.id+((s.ini&&s.fin)?('  ('+s.ini+' -> '+s.fin+')'):'');
+      return '<option value="'+_cfgEsc(s.id)+'"'+(s.id===semSel?' selected':'')+'>'+_cfgEsc(etiqueta)+'</option>';
+    }).join('');
+    if(!semSel){ opts='<option value="" selected>-- sin definir --</option>'+opts; }
+
+    var corteTxt = 'Corte en <b>'+LARGO[sel]+'</b>: cada semana empieza el <b>'+LARGO[(sel+1)%7]+'</b> y termina el <b>'+LARGO[sel]+'</b>.'
+      + ((explicito===null) ? ' <span style="color:#7d8590">(valor por defecto - aun no lo has fijado)</span>' : '');
+
+    ov.innerHTML=''
+    +'<div style="background:#fff;width:100%;max-width:560px;border-radius:16px 16px 0 0;max-height:90vh;display:flex;flex-direction:column">'
+      +'<div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid #eef2f7">'
+        +'<b style="font-size:15px;color:#1F3864">🗓 Semana y día de corte</b>'
+        +'<button id="_cfgX" type="button" style="margin-left:auto;background:#eef2f7;border:0;border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer">Cerrar</button>'
+      +'</div>'
+      +'<div style="overflow:auto;flex:1;padding:12px 14px">'
+        +'<div style="font-weight:800;font-size:13px;color:#1F3864;margin-bottom:6px">1) ¿Qué día se cierra la semana?</div>'
+        +'<div style="font-size:11.5px;color:#5C6779;margin-bottom:8px">'+corteTxt+'</div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+chips+'</div>'
+        +'<div style="font-weight:800;font-size:13px;color:#1F3864;margin:16px 0 6px">2) ¿Qué semana muestra el Gantt?</div>'
+        +'<div style="font-size:11.5px;color:#5C6779;margin-bottom:8px">Es la semana que se ve por defecto en el cronograma semanal.</div>'
+        +'<select id="_cfgSem" class="progselect" style="width:100%;height:44px;border:1.5px solid #D5DBE7;border-radius:10px;padding:0 12px;background:#fff;color:#1F3864;font-weight:700;font-size:13px">'+opts+'</select>'
+        +'<div id="_cfgSemRango" style="font-size:11.5px;color:#5C6779;margin-top:6px">'+ (rangoDe(semSel)?('Del '+_cfgEsc(rangoDe(semSel))):'') +'</div>'
+        +'<div style="margin:16px 0 4px">'
+          +'<button id="_cfgGo" type="button" '+(nD?'':'disabled')+' '
+          +'style="width:100%;background:'+(nD?'#1E7A46':'#B9C2CF')+';color:#fff;border:0;border-radius:10px;padding:13px;font-weight:800;font-size:13px;cursor:'+(nD?'pointer':'default')+'">'
+          +'✅ Guardar cambios ('+nD+')</button>'
+        +'</div>'
+        +'<div style="font-size:11px;color:#7d8590;margin-bottom:4px">Marca lo que quieras y luego presiona Guardar. Se aplica para todos al instante (tiempo real). Nada se guarda hasta que confirmes.</div>'
+        +'<hr style="border:0;border-top:1px solid #eef2f7;margin:14px 0">'
+        +'<div style="font-weight:800;font-size:13px;color:#7A4B00;margin-bottom:6px">Cerrar la semana ahora</div>'
+        +'<div style="font-size:11.5px;color:#5C6779;margin-bottom:8px">Congela el cronograma vivo de las <b>3 especialidades</b> como plan de la semana '+_cfgEsc((actual&&actual.id)||efectivoSemana()||'actual')+'. Genera las barras Programadas y ya no se puede editar ese plan.</div>'
+        +'<button id="_cfgCortar" type="button" style="width:100%;background:#7A4B00;color:#fff;border:0;border-radius:10px;padding:12px;font-weight:800;font-size:13px;cursor:pointer">✂️ Cerrar semana ahora y generar el plan</button>'
+      +'</div>'
+    +'</div>';
+
+    function cerrar(){ if(Object.keys(dirty).length && !_cfgConfirm('Tienes '+Object.keys(dirty).length+' cambio(s) SIN GUARDAR. ¿Salir y descartarlos?')) return; ov.remove(); }
+    ov.onclick=function(e){ if(e.target===ov) cerrar(); };
+    var xb=ov.querySelector('#_cfgX'); if(xb) xb.onclick=cerrar;
+
+    var chipsEls=ov.querySelectorAll('._cfgDia');
+    Array.prototype.forEach.call(chipsEls,function(b){
+      b.onclick=function(){ dirty.dia_corte=Number(b.getAttribute('data-d')); paint(); };
+    });
+
+    var ss=ov.querySelector('#_cfgSem');
+    if(ss) ss.onchange=function(){ dirty.semana_actual=ss.value||''; paint(); };
+
+    var go=ov.querySelector('#_cfgGo');
+    if(go) go.onclick=async function(){
+      if(!(typeof esAdmin==='function'&&esAdmin())){ _cfgToast('Solo el administrador'); return; }
+      var ns=Object.keys(dirty); if(!ns.length) return;
+      if(!_cfgConfirm('¿Guardar el día de corte y la semana? Se aplica para TODOS al instante (tiempo real).')) return;
+      go.disabled=true; go.textContent='Guardando...';
+      var cfg={};
+      if('dia_corte' in dirty) cfg.dia_corte=dirty.dia_corte;
+      if('semana_actual' in dirty) cfg.semana_actual=dirty.semana_actual;
+      try{
+        if(typeof _saveCfgObra==='function'){ await _saveCfgObra(cfg); }
+        else { throw new Error('config no disponible'); }
+        _cfgToast('Guardado ✓'); dirty={};
+        try{ if(typeof updAdminBox==='function') updAdminBox(); }catch(e){}
+        paint();
+      }catch(e){
+        _cfgToast('Se guardó local; se sincroniza al reconectar'); dirty={};
+        try{ if(typeof updAdminBox==='function') updAdminBox(); }catch(_e){}
+        paint();
+      }
+    };
+
+    var cb=ov.querySelector('#_cfgCortar');
+    if(cb) cb.onclick=async function(){
+      if(!(typeof esAdmin==='function'&&esAdmin())){ _cfgToast('Solo el administrador'); return; }
+      var sa=null; try{ if(typeof _semActual==='function') sa=_semActual(); }catch(e){}
+      var sid=(sa&&sa.id)||efectivoSemana();
+      if(!_cfgConfirm('¿Congelar el cronograma de las 3 especialidades como plan de la semana '+(sid||'actual')+'?\n\nEsto crea las barras Programadas y NO se puede editar luego.')) return;
+      cb.disabled=true; cb.textContent='Cerrando semana...';
+      try{
+        var quien=''; try{ quien=(typeof state!=='undefined'&&state&&state.user&&state.user.supervisor)||''; }catch(e){}
+        var res=null;
+        if(typeof _cortarSemana==='function'){ res=await _cortarSemana(sid,{force:false,quien:quien}); }
+        else { throw new Error('corte no disponible'); }
+        var n=(res&&typeof res.creadas==='number')?res.creadas:0;
+        _cfgToast(n>0?('Semana cerrada ✓ ('+n+' actividades)'):'La semana ya estaba cerrada');
+        try{ if(typeof updAdminBox==='function') updAdminBox(); }catch(e){}
+      }catch(e){
+        _cfgToast('No se pudo cerrar (¿sin señal?)');
+      }
+      cb.disabled=false; cb.textContent='✂️ Cerrar semana ahora y generar el plan';
+    };
+  }
+  paint();
+}
+
+/* =====================================================================
+ * _adminCorteBtnHTML() - markup del boton #btnCorte para #adminBox.
+ * Ancla (contrato 5 / DISENO_2 A): dentro de #adminBox, fila nueva ANTES de
+ * #btnInval. Estilo tipo #btnPermisos, teal #0F5E5A. Handler _onBtnCorte.
+ * ===================================================================== */
+function _adminCorteBtnHTML(){
+  var c=_cfgObraGet(); var d=_cfgCorteActual(); var DIAS=_cfgDIAS();
+  var etDia=(d===null)?'--':DIAS[d];
+  var etSem=(c&&c.semana_actual)?c.semana_actual:'--';
+  return '<button id="btnCorte" type="button" onclick="_onBtnCorte()" '
+    +'style="width:100%;background:#0F5E5A;color:#fff;font-size:13px;margin-bottom:9px;padding:10px;border:0;border-radius:10px;cursor:pointer">'
+    +'🗓 Semana '+_cfgEsc(etSem)+' · corte '+_cfgEsc(etDia)
+    +'</button>';
+}
+
+/* handler global del boton #btnCorte */
+function _onBtnCorte(){ if(typeof _showConfigSemana==='function') _showConfigSemana(); }
+
+/* inyeccion/refresco idempotente para integracion (A5): inserta #btnCorte antes
+ * de #btnInval si falta, o refresca su rotulo. Llamable desde updAdminBox. */
+function _adminCorteEnsure(){
+  try{
+    var doc=(typeof document!=='undefined')?document:null; if(!doc) return;
+    var box=doc.getElementById('adminBox'); if(!box) return;
+    var btn=doc.getElementById('btnCorte');
+    if(!btn){
+      var tmp=doc.createElement('div'); tmp.innerHTML=_adminCorteBtnHTML();
+      btn=tmp.firstChild;
+      var anchor=doc.getElementById('btnInval');
+      if(anchor&&anchor.parentNode===box){ box.insertBefore(btn,anchor); }
+      else { box.appendChild(btn); }
+    } else {
+      var c=_cfgObraGet(); var d=_cfgCorteActual(); var DIAS=_cfgDIAS();
+      var etDia=(d===null)?'--':DIAS[d]; var etSem=(c&&c.semana_actual)?c.semana_actual:'--';
+      btn.innerHTML='🗓 Semana '+_cfgEsc(etSem)+' · corte '+_cfgEsc(etDia);
+    }
+  }catch(e){}
+}
+
+/* export para tests node (no afecta al navegador) */
+if (typeof module!=='undefined' && module.exports){
+  module.exports = {
+    _showConfigSemana, _adminCorteBtnHTML, _onBtnCorte, _adminCorteEnsure,
+    _cfgDIAS, _cfgDIASLARGO, _cfgCorteActual, _cfgObraGet, _CFG_CORTE_DEFAULT
+  };
+}
+
+/* =====================================================================
+ * UPD-09 · MÓDULO A3 — PANTALLA GANTT SEMANAL  (build/mod_gantt.js)
+ * ---------------------------------------------------------------------
+ * Implementa el CONTRATO_INTERFACES.md §5 (A3) y el DISENO_3_UI.md (iv).
+ * Expone: _showGantt(esp?)  → overlay pantalla completa, tema coherente.
+ *
+ * CONSUME de A1 (mod_datos.js), NO reimplementa:
+ *   _semActual(), _semBounds(a), _progSemana(sem,esp), _realSemana(id,bounds),
+ *   _noPlanificadas(sem,esp,bounds), state.cfgObra
+ * CONSUME de A4 (con guarda typeof):
+ *   _razonUI(sem, partida_id, contenedor)  → hueco de razón (si no está, placeholder).
+ * Helpers YA existentes en index.html (usar; NO redefinir):
+ *   esc, toast, codeOf, metaOf, fmtF, qty, esAdmin, DISC, _DCOL/_dcol.
+ *
+ * Reglas de acoplamiento (§6): todo top-level function; globals nuevos con prefijo _gantt.
+ * SOLO LECTURA (salvo el hueco de razón, que delega en A4). Sin prompt().
+ * Layout CSS grid: [razón][actividad][L M X J V S D de la semana].
+ * Responsivo: en móvil la banda de días hace scroll-x (contenedor _ganttScroll).
+ * ===================================================================== */
+
+/* ---- constantes de tema (espejo de _DCOL del index; fallback si A1/app no cargó) ---- */
+var _ganttDCOL = (typeof _DCOL!=='undefined' && _DCOL) ? _DCOL : {'Civil':'#1E7A46','Mecánica':'#1F6FEB','Eléctrica':'#B45309'};
+var _ganttESPS = (typeof DISC!=='undefined' && DISC && DISC.length) ? DISC.slice() : ['Mecánica','Eléctrica','Civil'];
+var _GANTT_PROG_FILL='#C7D2FE', _GANTT_PROG_BORDER='#6366F1';   /* barra programada (referencia) */
+var _GANTT_OK='#1E7A46',        _GANTT_LATE='#B45309';          /* real al día / real atrasada    */
+var _GANTT_NOPLAN='#EA580C';    /* badge no planificada */
+var _GANTT_TITLE='#1F3864';     /* azul de cabecera del tema */
+var _GANTT_NEUTRAL='#94A3B8';   /* barra Real sin META fijada -> gris/neutro (REWORK) */
+
+/* REWORK · avance% de la SEMANA = cantSem / metaOf(pid).total * 100 (clamp 0..100). Si no hay total cuantitativo, cae a real.pctAcum. */
+function _ganttAvancePct(pid, real){ real=real||{}; var m=null; try{ if(typeof metaOf==='function') m=metaOf(pid); }catch(e){} var tot=(m&&m.total!=null)?Number(m.total):0; if(tot>0){ var v=Math.round((Number(real.cantSem||0)/tot)*100); if(v<0)v=0; if(v>100)v=100; return v; } return (real.pctAcum!=null)?Math.round(real.pctAcum):0; }
+
+/* color de disciplina, con guardas (usa _dcol del index si existe) */
+function _ganttColEsp(d){ try{ if(typeof _dcol==='function') return _dcol(d); }catch(e){} return _ganttDCOL[d]||'#5C6779'; }
+/* escape seguro aunque 'esc' aún no exista */
+function _ganttEsc(s){ try{ if(typeof esc==='function') return esc(s); }catch(e){} return String(s==null?'':s).replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];}); }
+/* qty seguro */
+function _ganttQty(n){ try{ if(typeof qty==='function') return qty(n); }catch(e){} n=+n; return (n===Math.round(n))?String(n):String(+n.toFixed(2)); }
+/* toast seguro */
+function _ganttToast(m){ try{ if(typeof toast==='function'){ toast(m); return; } }catch(e){} }
+/* etiqueta corta del día (Dom, Lun…) a partir de un ISO */
+function _ganttDowLbl(iso){ var WD=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']; var a=String(iso||'').slice(0,10).split('-'); var d=new Date(+a[0],(+a[1]||1)-1,(+a[2]||1),12,0,0); return WD[d.getDay()]; }
+/* número de día del mes desde un ISO */
+function _ganttDayNum(iso){ var a=String(iso||'').slice(0,10).split('-'); return +a[2]||0; }
+/* rango legible "06–12 jul" usando fmtF si está */
+function _ganttRango(b){ try{ if(typeof fmtF==='function') return fmtF(b.ini)+' — '+fmtF(b.fin); }catch(e){} return (b.ini||'')+' → '+(b.fin||''); }
+
+/* ---------------------------------------------------------------------
+ * _showGantt(esp?) — pantalla completa (overlay) del Gantt semanal.
+ *   esp opcional: especialidad inicial del filtro. Si no se pasa:
+ *     supervisor -> su state.user.disc ; admin/otro -> sin filtro (todas).
+ * ------------------------------------------------------------------- */
+async function _showGantt(esp){
+  /* semana activa (de A1). Si A1 no cargó, aborta con aviso suave. */
+  if(typeof _semActual!=='function'){ _ganttToast('Gantt: falta la capa de datos (A1)'); return; }
+  var sem = _semActual();
+  var bounds = (typeof _semBounds==='function') ? _semBounds(sem.id) : sem;
+
+  /* especialidad inicial del filtro */
+  var espIni = (esp!=null && esp!=='') ? esp
+             : ((typeof state!=='undefined' && state && state.user && state.user.disc) ? state.user.disc : '');
+  /* admin puede alternar; el supervisor queda fijo en la suya */
+  var esAdm = false; try{ esAdm=(typeof esAdmin==='function' && esAdmin()); }catch(e){}
+  _ganttState = { sem:sem, bounds:bounds, esp:espIni, esAdm:esAdm };
+
+  /* monta overlay (patrón _showRoles) */
+  var ov=document.getElementById('_ganttOv'); if(ov) ov.remove();
+  ov=document.createElement('div'); ov.id='_ganttOv';
+  ov.style.cssText='position:fixed;inset:0;z-index:2147483400;background:rgba(15,25,45,.55);display:flex;align-items:flex-end;justify-content:center';
+  document.body.appendChild(ov);
+  function cerrar(){ ov.remove(); }
+  ov.onclick=function(e){ if(e.target===ov) cerrar(); };
+  _ganttState.ov=ov; _ganttState.cerrar=cerrar;
+
+  /* estructura fija (cabecera + cuerpo scrollable) — el cuerpo lo pinta _ganttPaint */
+  ov.innerHTML=''
+    +'<div style="background:#F4F7FB;width:100%;max-width:900px;border-radius:16px 16px 0 0;max-height:94vh;display:flex;flex-direction:column">'
+      +'<div id="_ganttHead" style="padding:12px 14px 8px;border-bottom:1px solid #e6ecf5"></div>'
+      +'<div id="_ganttBody" style="overflow:auto;flex:1;padding:8px 10px 16px"><div style="padding:24px;text-align:center;color:#7d8590;font-size:13px">Cargando semana…</div></div>'
+    +'</div>';
+  await _ganttPaint();
+}
+
+/* repinta cabecera + cuerpo según _ganttState (filtro/semana ya fijados) */
+async function _ganttPaint(){
+  var S=_ganttState; if(!S||!S.ov) return;
+  var bounds=S.bounds, sem=S.sem, esp=S.esp;
+
+  /* --- lee datos (A1) --- */
+  var prog=[]; try{ prog = (typeof _progSemana==='function') ? (await _progSemana(sem.id, esp||undefined)) || [] : []; }catch(e){ prog=[]; }
+  var noPlan=[]; try{ noPlan = (typeof _noPlanificadas==='function') ? (await _noPlanificadas(sem.id, esp||undefined, bounds)) || [] : []; }catch(e){ noPlan=[]; }
+
+  /* --- fila por actividad programada. La META manual es async: 1er render sin meta (neutro),
+         luego _ganttApplyMetas() precarga _metaSemGet y recolorea + recalcula PPC. --- */
+  var filas=[]; var programadas=prog.length;
+  for(var i=0;i<prog.length;i++){
+    var row=prog[i];
+    var real={cantSem:0,pctAcum:0,diasAvance:[],porDia:{}};
+    try{ if(typeof _realSemana==='function') real=_realSemana(row.partida_id, bounds)||real; }catch(e){}
+    var ev=_ganttEval(row, real, bounds, null);   /* metaPct=null en el 1er render (neutro) */
+    filas.push({ row:row, real:real, ev:ev, noPlan:false, idx:i });
+  }
+  /* --- no planificadas al final (sin barra programada) --- */
+  for(var j=0;j<noPlan.length;j++){
+    var pid=noPlan[j];
+    var real2={cantSem:0,pctAcum:0,diasAvance:[],porDia:{}};
+    try{ if(typeof _realSemana==='function') real2=_realSemana(pid, bounds)||real2; }catch(e){}
+    filas.push({ row:_ganttFakeRow(pid, esp), real:real2, ev:_ganttEval(null, real2, bounds, null), noPlan:true, idx:(prog.length+j) });
+  }
+  S.filas=filas;
+
+  /* PPC (REWORK) = (actividades con avancePct>=meta) / (actividades CON meta fijada).
+     En el 1er render aún no hay metas cargadas -> pendiente (null); _ganttRecalcPPC lo fija. */
+  _ganttRecalcPPC();
+
+  _ganttPaintHead();
+  _ganttPaintBody(filas);
+
+  /* precarga asíncrona de las metas manuales (fire-and-forget, mismo patrón que la razón) */
+  _ganttApplyMetas(filas);
+}
+
+/* Recalcula S.ppc a partir de S.filas según la regla de META (denominador = filas con meta fijada). */
+function _ganttRecalcPPC(){
+  var S=_ganttState; if(!S) return; var filas=S.filas||[];
+  var conMeta=0, cumplidas=0, programadas=0, noplan=0;
+  for(var i=0;i<filas.length;i++){
+    var it=filas[i]; if(it.noPlan){ noplan++; continue; } programadas++;
+    if(it.ev&&it.ev.metaFijada){ conMeta++; if(it.ev.cumplida) cumplidas++; }
+  }
+  var ppc = conMeta>0 ? Math.round(cumplidas*100/conMeta) : null;
+  S.ppc={ ppc:ppc, cumplidas:cumplidas, conMeta:conMeta, programadas:programadas, noplan:noplan };
+}
+
+/* Precarga async de _metaSemGet por fila planificada; recolorea la barra Real, actualiza el input
+   "% meta sem" (si el usuario no lo tocó) y recalcula el PPC en la cabecera. */
+async function _ganttApplyMetas(filas){
+  var S=_ganttState; if(!S||!S.ov) return; var sem=S.sem;
+  for(var i=0;i<filas.length;i++){
+    var it=filas[i]; if(it.noPlan) continue; var pid=it.row.partida_id;
+    var mp=null; try{ if(typeof _metaSemGet==='function') mp=await _metaSemGet(sem.id, pid); }catch(e){ mp=null; }
+    /* si el overlay cambió (cierre / repaint) mientras esperábamos, abortamos sin tocar el DOM viejo. */
+    if(!_ganttState || _ganttState!==S || !S.ov || !S.ov.parentNode) return;
+    it.ev=_ganttEval(it.row, it.real, S.bounds, mp);
+    _ganttRepaintRow(it);
+  }
+  _ganttRecalcPPC();
+  _ganttPaintHead();
+}
+
+/* Repinta banda + badge + celda de razón de UNA fila y sincroniza su input "% meta sem" si el usuario no lo editó. */
+function _ganttRepaintRow(it){
+  var S=_ganttState; if(!S||!S.ov) return; var idx=(it.idx!=null?it.idx:0);
+  var band=S.ov.querySelector('#_ganttBand_'+idx);
+  if(band){ band.innerHTML=_ganttBandHTML(it, S.bounds); }
+  var bdg=S.ov.querySelector('#_ganttBadge_'+idx);
+  if(bdg){ bdg.innerHTML=_ganttBadgeHTML(it); }
+  var inp=S.ov.querySelector('#_ganttMeta_'+idx);
+  if(inp && !inp._userDirty){ inp.value=(it.ev&&it.ev.metaPct!=null)?String(it.ev.metaPct):''; }
+  _ganttRazonCellRender(it);   /* meta fijada bajo meta -> aparece hueco de razón (A4) */
+}
+
+/* ---- cabecera: título+rango, chips de especialidad, PPC ---- */
+function _ganttPaintHead(){
+  var S=_ganttState; var head=S.ov.querySelector('#_ganttHead'); if(!head) return;
+  var rango=_ganttRango(S.bounds);
+  var pp=S.ppc||{ppc:null,cumplidas:0,conMeta:0,programadas:0,noplan:0};
+  var ppcTxt = (pp.ppc==null) ? '—' : (pp.ppc+'%');
+  var ppcCol = (pp.ppc==null) ? '#7d8590' : (pp.ppc>=80?_GANTT_OK:(pp.ppc>=50?'#B45309':'#B42318'));
+
+  /* chips de especialidad: admin alterna (incluye "Todas"); supervisor ve solo la suya (informativa) */
+  var chips='';
+  if(S.esAdm){
+    var opts=[{v:'',t:'Todas'}].concat(_ganttESPS.map(function(d){return {v:d,t:d};}));
+    chips=opts.map(function(o){
+      var on=(S.esp===o.v);
+      var col=o.v?_ganttColEsp(o.v):_GANTT_TITLE;
+      return '<button class="_ganttChip" data-esp="'+_ganttEsc(o.v)+'" style="border:1px solid '+col+';background:'+(on?col:'#fff')+';color:'+(on?'#fff':col)+';border-radius:999px;padding:6px 12px;font-weight:800;font-size:12px;cursor:pointer">'+_ganttEsc(o.t)+'</button>';
+    }).join('');
+  } else if(S.esp){
+    var c=_ganttColEsp(S.esp);
+    chips='<span style="border:1px solid '+c+';background:'+c+';color:#fff;border-radius:999px;padding:6px 12px;font-weight:800;font-size:12px">'+_ganttEsc(S.esp)+'</span>';
+  } else {
+    chips='<span style="color:#7d8590;font-size:12px;font-weight:700">Todas las especialidades</span>';
+  }
+
+  head.innerHTML=''
+    +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+      +'<b style="font-size:16px;color:'+_GANTT_TITLE+'">📊 Gantt semanal</b>'
+      +'<span style="color:#5c6779;font-size:13px;font-weight:600">'+_ganttEsc(rango)+'</span>'
+      +'<button id="_ganttX" style="margin-left:auto;background:#eef2f7;border:0;border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer">Cerrar</button>'
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">'+chips+'</div>'
+    +'<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px">'
+      +'<span style="font-weight:900;font-size:13px" title="PPC = actividades con avance>=meta / actividades con meta fijada">PPC: <span style="color:'+ppcCol+'">'+ppcTxt+'</span></span>'
+      +'<span style="color:#5c6779">Programadas: <b>'+pp.programadas+'</b></span>'
+      +'<span style="color:#5c6779">Con meta: <b>'+(pp.conMeta||0)+'</b></span>'
+      +'<span style="color:#5c6779">Cumplidas: <b>'+pp.cumplidas+'</b></span>'
+      +'<span style="color:#5c6779">No planificadas: <b style="color:'+_GANTT_NOPLAN+'">'+pp.noplan+'</b></span>'
+    +'</div>';
+
+  var x=head.querySelector('#_ganttX'); if(x) x.onclick=function(){ if(S.cerrar) S.cerrar(); };
+  head.querySelectorAll('._ganttChip').forEach(function(b){
+    b.onclick=function(){ S.esp=b.getAttribute('data-esp')||''; _ganttPaint(); };
+  });
+}
+
+/* ---- cuerpo: grilla (grid) actividades × días, con scroll-x en móvil ---- */
+function _ganttPaintBody(filas){
+  var S=_ganttState; var body=S.ov.querySelector('#_ganttBody'); if(!body) return;
+  var dias=S.bounds.dias;   /* 7 ISO */
+  /* columnas: [razón][actividad][7 días]. En móvil, min-width fuerza scroll-x. */
+  var COL_RAZON=200, COL_ACT=180, COL_DIA=64;
+  var minW = COL_RAZON+COL_ACT+COL_DIA*7;
+  var gridTpl = COL_RAZON+'px '+COL_ACT+'px repeat(7,minmax('+COL_DIA+'px,1fr))';
+
+  if(!filas.length){
+    body.innerHTML='<div style="padding:28px 14px;text-align:center;color:#7d8590;font-size:13px">Sin actividades en esta semana'
+      + (S.esp?(' para <b>'+_ganttEsc(S.esp)+'</b>'):'')
+      + '.<br><span style="font-size:11.5px">Si el admin aún no ha cerrado la semana, no habrá barras programadas.</span></div>';
+    return;
+  }
+
+  /* wrapper con scroll horizontal (banda de días) — responsivo móvil */
+  var html='<div id="_ganttScroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
+  html+='<div id="_ganttGrid" style="display:grid;grid-template-columns:'+gridTpl+';min-width:'+minW+'px;gap:0">';
+
+  /* fila cabecera de columnas */
+  html+='<div style="'+_ganttCellCss('#eef3fb',true)+'font-weight:800;font-size:11px;color:#5c6779">¿POR QUÉ NO AVANZA?</div>';
+  html+='<div style="'+_ganttCellCss('#eef3fb',true)+'font-weight:800;font-size:11px;color:#5c6779">ACTIVIDAD</div>';
+  for(var d=0;d<7;d++){
+    /* cabecera de día: clickeable -> _ganttDayTap(iso) (abre Detalle del día). */
+    html+='<div class="_ganttDay" data-gday="'+_ganttEsc(dias[d])+'" title="Ver detalle del día" style="'+_ganttCellCss('#eef3fb',true)+'text-align:center;line-height:1.15;cursor:pointer">'
+      +'<div style="font-weight:800;font-size:10.5px;color:#5c6779">'+_ganttDowLbl(dias[d])+'</div>'
+      +'<div style="font-weight:900;font-size:12px;color:'+_GANTT_TITLE+'">'+_ganttDayNum(dias[d])+'</div>'
+      +'</div>';
+  }
+
+  /* filas por actividad */
+  for(var f=0;f<filas.length;f++){
+    var it=filas[f]; var idx=(it.idx!=null?it.idx:f); var row=it.row; var real=it.real; var ev=it.ev;
+    var espCol=_ganttColEsp(row.especialidad||S.esp);
+    var cod=''; try{ cod=(typeof codeOf==='function')?codeOf({id:row.partida_id,codigo:row.codigo}):(row.codigo||row.partida_id); }catch(e){ cod=row.codigo||row.partida_id; }
+    var nom=row.partida_nombre||row.nombre||'';
+    var unidad=row.unidad||''; var metaTxt = (row.meta_plan!=null)? (_ganttQty(row.meta_plan)+(unidad?(' '+unidad):'')) : '';
+
+    /* --- celda IZQUIERDA: razón (delegada a A4) o estado --- */
+    var razonId='_ganttRz_'+idx;
+    var rowBg = (idx%2===0)?'#ffffff':'#fafcff';
+    html+='<div id="'+razonId+'" style="'+_ganttCellCss(rowBg,false)+'font-size:11px;color:#5c6779;display:flex;flex-direction:column;justify-content:center;gap:4px"></div>';
+
+    /* --- celda ACTIVIDAD (badge por META + input "% meta sem") --- */
+    var badge = _ganttBadgeHTML(it);
+    /* input editable de META MANUAL (%) — solo para filas planificadas; las no-planificadas no llevan meta */
+    var metaInput = it.noPlan ? ''
+      : ('<div style="display:flex;align-items:center;gap:4px;margin-top:5px">'
+          +'<span style="font-size:9.5px;color:#5c6779;font-weight:700">% meta sem</span>'
+          +'<input id="_ganttMeta_'+idx+'" class="_ganttMeta" type="number" min="0" max="100" inputmode="numeric" '
+            +'data-pid="'+_ganttEsc(row.partida_id)+'" placeholder="—" '
+            +'value="'+((ev&&ev.metaPct!=null)?_ganttEsc(ev.metaPct):'')+'" '
+            +'style="width:56px;font-size:11px;padding:3px 5px;border:1px solid #cbd5e1;border-radius:7px;box-sizing:border-box;text-align:center">'
+        +'</div>');
+    html+='<div style="'+_ganttCellCss(rowBg,false)+'display:flex;flex-direction:column;justify-content:center">'
+      +'<div style="font-weight:800;font-size:11.5px;color:#1b2430;line-height:1.2">['+_ganttEsc(cod)+'] '+_ganttEsc(nom)+'</div>'
+      +'<div style="font-size:10px;color:'+espCol+';font-weight:700;margin-top:2px">'+_ganttEsc(row.especialidad||S.esp||'')+(metaTxt?(' · '+_ganttEsc(metaTxt)):'')+'</div>'
+      +'<div id="_ganttBadge_'+idx+'">'+badge+'</div>'
+      +metaInput
+      +'</div>';
+
+    /* --- BANDA DE 7 DÍAS: dos sub-barras (programada arriba, real abajo) --- */
+    /* la banda se dibuja como UNA celda que ocupa las 7 columnas via grid-column span */
+    html+='<div id="_ganttBand_'+idx+'" style="grid-column:span 7;'+_ganttCellCss(rowBg,false)+'padding:6px 4px;display:flex;flex-direction:column;gap:5px;justify-content:center">'
+      + _ganttBandHTML(it, S.bounds)
+      +'</div>';
+  }
+
+  html+='</div></div>'; /* grid + scroll */
+  html+='<div style="padding:10px 6px 2px;font-size:11px;color:#7d8590">'
+    +'<span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:'+_GANTT_PROG_FILL+';border:1px solid '+_GANTT_PROG_BORDER+';vertical-align:middle;margin-right:4px"></span>Programada '
+    +'&nbsp;·&nbsp;<span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:'+_GANTT_OK+';vertical-align:middle;margin:0 4px"></span>Real al día '
+    +'&nbsp;·&nbsp;<span style="display:inline-block;width:12px;height:8px;border-radius:2px;background:'+_GANTT_LATE+';vertical-align:middle;margin:0 4px"></span>Real atrasada'
+    +'</div>';
+
+  body.innerHTML=html;
+
+  /* --- render de la zona de razón por fila (delegado a A4 con guarda typeof) --- */
+  for(var g=0;g<filas.length;g++){
+    var itg=filas[g]; _ganttRazonCellRender(itg);
+  }
+
+  /* --- WIRING (REWORK) --- */
+  _ganttWireDayTaps(body);    /* tocar un día -> _ganttDayTap(iso) */
+  _ganttWireMetaInputs(body); /* input "% meta sem" -> _metaSemSet + recolor + PPC */
+}
+
+/* pinta la celda de razón/estado de UNA fila según su ev (meta): cumplida->✅ ; bajo meta->hueco razón (A4) ; neutro->hint. */
+function _ganttRazonCellRender(it){
+  var S=_ganttState; if(!S||!S.ov) return; var idx=(it.idx!=null?it.idx:0);
+  var cont=S.ov.querySelector('#_ganttRz_'+idx); if(!cont) return;
+  if(it.noPlan){ cont.innerHTML='<span style="color:#9aa4b2;font-size:10.5px">(no estaba en el plan de la semana)</span>'; return; }
+  var ev=it.ev||{};
+  if(ev.metaFijada && ev.cumplida){ cont._rzMounted=false; cont.innerHTML='<span style="color:'+_GANTT_OK+';font-weight:800;font-size:15px" title="cumplió la meta de la semana">✅</span>'; return; }
+  if(!ev.metaFijada){ cont._rzMounted=false; cont.innerHTML='<span style="color:#9aa4b2;font-size:10.5px">Fija una <b>% meta sem</b> para evaluar</span>'; return; }
+  /* meta fijada y NO cumplida (bajo meta) -> hueco de razón. Lo llena A4; si no está, placeholder. */
+  if(cont._rzMounted) return;    /* ya montado por A4: no lo pisamos */
+  cont.innerHTML='';
+  if(typeof _razonUI==='function'){
+    try{ _razonUI(_ganttState.sem, it.row.partida_id, cont); }
+    catch(e){ cont.innerHTML=_ganttRazonPlaceholder(); }
+  } else {
+    cont.innerHTML=_ganttRazonPlaceholder();
+  }
+}
+
+/* badge de estado de la fila (por META manual): cumplida / bajo meta / sin meta / no planificada. */
+function _ganttBadgeHTML(it){
+  if(it.noPlan) return '<span style="display:inline-block;background:'+_GANTT_NOPLAN+';color:#fff;border-radius:6px;padding:1px 6px;font-size:9.5px;font-weight:800;margin-top:3px">🟠 NO PLANIFICADA</span>';
+  var ev=it.ev||{};
+  if(!ev.metaFijada) return '<span style="color:'+_GANTT_NEUTRAL+';font-weight:700;font-size:10px;margin-top:3px">sin meta</span>';
+  if(ev.cumplida) return '<span style="color:'+_GANTT_OK+';font-weight:800;font-size:10px;margin-top:3px">✅ cumplida</span>';
+  return '<span style="color:'+_GANTT_LATE+';font-weight:800;font-size:10px;margin-top:3px">⚠ bajo meta</span>';
+}
+
+/* Cablea el tap de día (cabecera + celdas de la banda Real) a _ganttDayTap(iso). Sin duplicar handlers (delegación). */
+function _ganttWireDayTaps(scope){
+  var S=_ganttState; if(!S||!S.ov) return; scope=scope||S.ov;
+  var grid=scope.querySelector('#_ganttGrid')||scope;
+  if(grid._dayTapWired) return; grid._dayTapWired=true;   /* un único handler delegado */
+  grid.addEventListener('click', function(ev){
+    var t=ev.target; var el=(t&&t.closest)?t.closest('[data-gday]'):null;
+    if(!el) return;
+    var iso=el.getAttribute('data-gday'); if(!iso) return;
+    /* usa la fecha ISO de esa columna (contrato). _ganttState.bounds.dias ya es global. */
+    if(typeof _ganttDayTap==='function') _ganttDayTap(iso);
+  });
+}
+
+/* Cablea cada input "% meta sem" -> _metaSemSet(sem,pid,valor,quien) y recolorea la fila + PPC en caliente. */
+function _ganttWireMetaInputs(scope){
+  var S=_ganttState; if(!S||!S.ov) return; scope=scope||S.ov;
+  var inputs=scope.querySelectorAll('._ganttMeta'); if(!inputs||!inputs.length) return;
+  Array.prototype.forEach.call(inputs, function(inp){
+    if(inp._metaWired) return; inp._metaWired=true;
+    inp.addEventListener('input', function(){ inp._userDirty=true; });
+    inp.addEventListener('change', function(){
+      var pid=inp.getAttribute('data-pid');
+      var raw=(inp.value==null?'':String(inp.value).trim());
+      var val=(raw==='')?null:Math.max(0,Math.min(100,Number(raw)));
+      if(val!=null && isNaN(val)) val=null;
+      if(val==null) inp.value=''; else inp.value=String(val);
+      var q=''; try{ q=(typeof state!=='undefined'&&state.user&&state.user.supervisor)||''; }catch(e){}
+      /* fire-and-forget (mismo patrón que la razón): persiste sin bloquear el UI. */
+      try{ if(typeof _metaSemSet==='function') _metaSemSet(_ganttState.sem.id, pid, val, q); }catch(e){}
+      if(typeof toast==='function') toast(val==null?'Meta borrada':('Meta '+val+'% guardada'));
+      /* recolorea en caliente la fila afectada y recalcula el PPC */
+      var idx=_ganttFindIdxByPid(pid);
+      if(idx!=null && S.filas && S.filas[idx]){
+        var it=S.filas[idx];
+        it.ev=_ganttEval(it.row, it.real, S.bounds, val);
+        inp._userDirty=false;
+        _ganttRepaintRow(it);
+        _ganttRecalcPPC();
+        _ganttPaintHead();
+      }
+    });
+  });
+}
+
+/* localiza el índice de fila por partida_id (para recolorear al editar la meta) */
+function _ganttFindIdxByPid(pid){
+  var S=_ganttState; if(!S||!S.filas) return null;
+  for(var i=0;i<S.filas.length;i++){ var it=S.filas[i]; if(it&&!it.noPlan&&it.row&&String(it.row.partida_id)===String(pid)) return (it.idx!=null?it.idx:i); }
+  return null;
+}
+
+/* placeholder del hueco de razón mientras A4 no está cargado */
+function _ganttRazonPlaceholder(){
+  return '<div style="border:1px dashed #cbd5e1;border-radius:8px;padding:6px;color:#94a3b8;font-size:10.5px;line-height:1.25">'
+        +'✏️ ¿por qué no avanza?<br><span style="font-size:9.5px">(la caja de razón la aporta el módulo de razones)</span></div>';
+}
+
+/* CSS común de celda de la grilla */
+function _ganttCellCss(bg, header){
+  return 'background:'+bg+';padding:'+(header?'6px 8px':'8px')+';border-bottom:1px solid #e6ecf5;border-right:1px solid #eef2f7;box-sizing:border-box;';
+}
+
+/* ---------------------------------------------------------------------
+ * _ganttBandHTML(item, bounds) — dos barras sobre la banda de 7 días.
+ *   (a) PROGRAMADA: celdas start_plan..start_plan+dias_plan-1 ∩ semana, + % meta.
+ *   (b) REAL: progreso proporcional; verde si al día vs programada, ámbar si atrasada;
+ *       marca por-día con porDia/diasAvance.
+ * Se dibuja con 7 columnas internas (grid) alineadas a la cabecera.
+ * ------------------------------------------------------------------- */
+function _ganttBandHTML(item, bounds){
+  var dias=bounds.dias; var ev=item.ev; var real=item.real||{}; var noPlan=item.noPlan;
+
+  /* fila (a) PROGRAMADA */
+  var progCells='';
+  for(var i=0;i<7;i++){
+    var on = (!noPlan && ev.progSet && ev.progSet[dias[i]]);
+    progCells+='<div style="height:14px;border-radius:3px;'
+      +(on ? ('background:'+_GANTT_PROG_FILL+';border:1px solid '+_GANTT_PROG_BORDER+';') : 'background:transparent;border:1px dashed #e3e8f0;')
+      +'"></div>';
+  }
+  var pctPlanTxt = (!noPlan && ev.pctPlan!=null) ? (' meta '+ev.pctPlan+'%') : (noPlan ? '' : '');
+  var progRow = noPlan
+    ? '<div style="font-size:10px;color:#9aa4b2;font-style:italic;padding:1px 2px">· sin barra programada ·</div>'
+    : '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;align-items:center">'+progCells+'</div>'
+      +'<div style="font-size:9.5px;color:'+_GANTT_PROG_BORDER+';font-weight:700;margin-top:1px">PROGRAMADA'+pctPlanTxt+'</div>';
+
+  /* fila (b) REAL: color por META (verde>=meta / ámbar<meta / gris sin meta / naranja no-plan).
+     Cada celda-día es clickeable -> _ganttDayTap(iso) (delegado en _ganttWireDayTaps). */
+  var realColor = (noPlan) ? _GANTT_NOPLAN : (ev.realColor || _GANTT_NEUTRAL);
+  var porDia = real.porDia||{};
+  var realCells='';
+  for(var k=0;k<7;k++){
+    var has = porDia[dias[k]]!=null || (real.diasAvance && real.diasAvance.indexOf(dias[k])>=0);
+    realCells+='<div class="_ganttDay" data-gday="'+_ganttEsc(dias[k])+'" title="'+(has?('avance '+_ganttQty(porDia[dias[k]]||0)+' — ver detalle del día'):'ver detalle del día')+'" style="height:14px;border-radius:3px;cursor:pointer;'
+      +(has ? ('background:'+realColor+';') : 'background:#eef2f7;')
+      +'"></div>';
+  }
+  /* avance% de la SEMANA (cantSem/meta.total*100) — lo que se compara contra la META manual */
+  var avPct = (ev.avancePct!=null)? ev.avancePct : ((real.pctAcum!=null)?Math.round(real.pctAcum):0);
+  var realLbl;
+  if(noPlan){ realLbl='REAL +'+_ganttQty(real.cantSem||0); }
+  else if(ev.metaFijada){ realLbl='REAL '+avPct+'% / meta '+ev.metaPct+'%'+(ev.cumplida?' ✓':' ⚠'); }
+  else { realLbl='REAL '+avPct+'% (sin meta)'; }
+  var realRow='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;align-items:center">'+realCells+'</div>'
+      +'<div style="font-size:9.5px;color:'+realColor+';font-weight:800;margin-top:1px">'+_ganttEsc(realLbl)+'</div>';
+
+  return progRow+realRow;
+}
+
+/* ---------------------------------------------------------------------
+ * _ganttEval(row|null, real, bounds) — evalúa una fila:
+ *   - progSet: mapa {iso:1} de los días programados dentro de la semana.
+ *   - pctPlan: % de meta programada (de meta_plan). pctReal: pctAcum.
+ *   - alDia: real "al día" vs la programada (heurística Last Planner).
+ *   - cumplida: pctReal >= pctPlan (meta de la semana alcanzada).
+ * row===null => no planificada (sin plan; alDia=true por convención de badge naranja).
+ * ------------------------------------------------------------------- */
+function _ganttEval(row, real, bounds, metaPct){
+  var dias=bounds.dias;
+  real=real||{}; var pctReal=(real.pctAcum!=null)?Math.round(real.pctAcum):0;
+  /* REWORK · avance% de la SEMANA (cantSem/metaOf.total*100); es lo que se compara contra la META manual. */
+  var pid=row?row.partida_id:null; var avancePct=(pid!=null)?_ganttAvancePct(pid, real):pctReal;
+  /* META MANUAL (%) fijada por Luis/supervisor para esta semana (o null si no hay). */
+  var mp=(metaPct==null||metaPct==='')?null:Number(metaPct); if(mp!=null&&isNaN(mp)) mp=null;
+  var metaFijada=(mp!=null);
+
+  if(!row){
+    /* no planificada: sin barra programada; su color Real es naranja (badge), no entra en PPC. */
+    return { progSet:{}, pctPlan:null, pctReal:pctReal, avancePct:avancePct, metaPct:mp, metaFijada:false,
+             alDia:true, cumplida:false, realColor:_GANTT_NOPLAN, prog0:0 };
+  }
+
+  /* días programados dentro de la semana: start_plan .. start_plan+dias_plan-1  ∩  [ini..fin] (barra PROGRAMADA) */
+  var progSet={}; var prog0=0;
+  var start=String(row.start_plan||'').slice(0,10);
+  var nd=(row.dias_plan!=null)?Math.max(0,Number(row.dias_plan)):0;
+  if(start && nd>0){
+    for(var i=0;i<7;i++){
+      var iso=dias[i];
+      if(_ganttInRange(iso, start, nd)){ progSet[iso]=1; prog0++; }
+    }
+  }
+
+  /* pctPlan = % de la franja programada que cae en la semana (SOLO para la barra PROGRAMADA / marca visual). */
+  var pctPlan=null;
+  if(nd>0){ pctPlan = Math.round( Math.min(1, prog0/nd) * 100 ); }
+  else if(row.meta_plan!=null){ pctPlan=100; }
+
+  /* REGLA REWORK (decisión de Luis): la barra Real y el "cumplida"/PPC se deciden por la META MANUAL:
+       - meta fijada  -> VERDE si avancePct >= metaPct ; ÁMBAR si es menor. cumplida = (avancePct>=metaPct).
+       - sin meta     -> GRIS/NEUTRO ; cumplida=false ; NO entra en el PPC (lo decide _ganttPaint por metaFijada).
+     Ya NO se usa la heurística de días transcurridos para el color/PPC. */
+  var alDia, cumplida, realColor;
+  if(metaFijada){
+    cumplida = (avancePct >= mp);
+    alDia    = cumplida;
+    realColor = cumplida ? _GANTT_OK : _GANTT_LATE;
+  } else {
+    cumplida = false;
+    alDia    = true;               /* neutro: sin meta no se marca "atrasada" */
+    realColor = _GANTT_NEUTRAL;
+  }
+
+  return { progSet:progSet, pctPlan:pctPlan, pctReal:pctReal, avancePct:avancePct, metaPct:mp, metaFijada:metaFijada,
+           alDia:alDia, cumplida:cumplida, realColor:realColor, prog0:prog0 };
+}
+
+/* ¿iso está dentro de [start .. start+nd-1] contando días naturales? */
+function _ganttInRange(iso, start, nd){
+  var di=_ganttDiffDays(start, iso);   /* iso - start en días */
+  return di>=0 && di<=(nd-1);
+}
+/* diferencia en días naturales b-a (ISO). */
+function _ganttDiffDays(a, b){
+  var pa=String(a).slice(0,10).split('-'), pb=String(b).slice(0,10).split('-');
+  var da=Date.UTC(+pa[0],(+pa[1]||1)-1,(+pa[2]||1)), db=Date.UTC(+pb[0],(+pb[1]||1)-1,(+pb[2]||1));
+  return Math.round((db-da)/86400000);
+}
+/* ISO de hoy (usa todayISO() de la app si existe) */
+function _ganttTodayISO(){ try{ if(typeof todayISO==='function') return todayISO(); }catch(e){} var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+/* fila "falsa" para una no-planificada (sin snapshot): toma nombre/código/esp del catálogo si existe */
+function _ganttFakeRow(pid, esp){
+  var bp=null; try{ bp=(typeof DATA!=='undefined'&&DATA._byId)?DATA._byId[pid]:null; }catch(e){}
+  var cod=pid; try{ if(typeof codeOf==='function') cod=codeOf(bp||{id:pid}); }catch(e){}
+  var m=null; try{ if(typeof metaOf==='function') m=metaOf(pid); }catch(e){}
+  return {
+    partida_id: pid,
+    codigo: cod,
+    partida_nombre: (bp&&bp.nombre)||'',
+    especialidad: (bp&&bp.esp)||esp||'',
+    start_plan: null, dias_plan: null,
+    meta_plan: (m&&m.total!=null)?m.total:null,
+    unidad: (m&&m.unidad)||''
+  };
+}
+
+/* estado del módulo (una sola pantalla a la vez) */
+var _ganttState=null;
+
+/* ---- export para tests node (no afecta al navegador) ---- */
+if (typeof module!=='undefined' && module.exports){
+  module.exports = { _showGantt, _ganttPaint, _ganttEval, _ganttBandHTML, _ganttInRange, _ganttDiffDays, _ganttFakeRow, _ganttAvancePct, _ganttBadgeHTML, _ganttRecalcPPC, _ganttApplyMetas, _ganttRepaintRow, _ganttRazonCellRender, _ganttWireDayTaps, _ganttWireMetaInputs, _ganttFindIdxByPid };
+}
+
+/* UPD-09 · mod_razones_nav.js — A4 (razones + no-planificada + navegación). Alineado al E2E/contrato. */
+async function _razonUI(sem, partida_id, cont){
+  if(!cont) return null;
+  if(cont._rzMounted) return null;                 // idempotente (sync antes del await)
+  cont._rzMounted=true;
+  var wid = sem || ((typeof _semActual==='function') ? _semActual().id : '');
+  var pre=''; try{ if(typeof _razonGet==='function') pre=(await _razonGet(wid, partida_id))||''; }catch(e){}
+  var wrap=document.createElement('div'); wrap.className='_razonBox'; wrap.style.cssText='display:flex;flex-direction:column;gap:4px';
+  var ta=document.createElement('textarea'); ta.className='_rzTa'; ta.setAttribute('data-pid',partida_id);
+  ta.placeholder='¿por qué no avanza?'; ta.value=pre;
+  ta.style.cssText='width:100%;min-height:38px;font-size:11.5px;padding:6px;border:1px solid #E3B7A0;border-radius:8px;resize:vertical';
+  var saved=pre;
+  async function save(){ var v=(ta.value||'').trim(); if(v===saved)return; saved=v;
+    var q=(typeof state!=='undefined'&&state.user&&state.user.supervisor)||'';
+    try{ if(typeof _razonSet==='function') await _razonSet(wid, partida_id, v, q); }catch(e){}
+    if(typeof toast==='function') toast('Razón guardada'); }
+  ta.addEventListener('blur', save);
+  var bt=document.createElement('button'); bt.type='button'; bt.className='_rzSave'; bt.textContent='Guardar razón';
+  bt.style.cssText='align-self:flex-end;background:#7A1A1A;color:#fff;border:0;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800';
+  bt.onclick=save;
+  wrap.appendChild(ta); wrap.appendChild(bt); cont.appendChild(wrap); return wrap;
+}
+function _razonNoPlanBadgeHTML(){ return '<span class="_noPlanBadge" style="background:#FFF4E5;color:#B45309;border:1px solid #F2C88B;border-radius:999px;padding:1px 8px;font-size:10.5px;font-weight:800">🟠 NO PLANIFICADA</span>'; }
+function _razonNoPlanMark(el){ if(el&&el.insertAdjacentHTML) el.insertAdjacentHTML('beforeend',' '+_razonNoPlanBadgeHTML()); }
+function _ganttDayTap(iso){ if(!iso)return; try{var ov=document.getElementById('_ganttOv'); if(ov)ov.remove();}catch(e){} if(typeof prevDia==='function'){try{prevDia(String(iso));}catch(e){}} }
+function _btnGanttHTML(){ return '<button id="btnGantt" type="button" onclick="_onBtnGantt()" style="flex:1;height:42px;background:#274690;color:#fff;border:0;border-radius:10px;font-size:14px;font-weight:800">📊 Gantt semanal</button>'; }
+function _onBtnGantt(){ var disc=(typeof state!=='undefined'&&state.user&&state.user.disc)||''; if(typeof _showGantt==='function')_showGantt(disc); }
+function _btnGanttEnsure(){
+  var ex=document.getElementById('btnGantt'); if(ex) return ex;
+  var pend=document.getElementById('pendBtn'); var row=pend&&pend.parentNode;
+  if(!row){ var hs=document.querySelectorAll('h2'),h=null; for(var i=0;i<hs.length;i++){ if(/Mis partes por d/i.test(hs[i].textContent||'')){h=hs[i];break;} }
+    if(h&&h.parentNode){ row=document.createElement('div'); row.style.cssText='display:flex;gap:8px;padding:0 14px 8px'; h.parentNode.insertBefore(row,h.nextSibling); } }
+  if(!row) return null;
+  row.insertAdjacentHTML('beforeend', _btnGanttHTML());
+  return document.getElementById('btnGantt');
+}
+if(typeof window!=='undefined'){window._razonUI=_razonUI;window._ganttDayTap=_ganttDayTap;window._btnGanttHTML=_btnGanttHTML;window._onBtnGantt=_onBtnGantt;window._btnGanttEnsure=_btnGanttEnsure;window._razonNoPlanBadgeHTML=_razonNoPlanBadgeHTML;window._razonNoPlanMark=_razonNoPlanMark;}
+
+/* ============ UPD-09 — fin ============ */
 async function medirRegiones(){toast('\ud83c\udf0e Midiendo 5 regiones\u2026 (unos 15 s)');
 var R=[['S\u00e3o Paulo sa-east-1 (ACTUAL)','https://s3.sa-east-1.amazonaws.com/'],['Virginia us-east-1','https://s3.us-east-1.amazonaws.com/'],['Ohio us-east-2','https://s3.us-east-2.amazonaws.com/'],['Oreg\u00f3n us-west-2','https://s3.us-west-2.amazonaws.com/'],['Canad\u00e1 ca-central-1','https://s3.ca-central-1.amazonaws.com/']];
 var out=[];
@@ -1400,7 +2285,7 @@ async function _showConflictos(){if(!(typeof esAdmin==='function'&&esAdmin())){t
 async function _resolverConflicto(id,choice,cf){try{if(choice==='ninguno'&&cf&&cf.tabla){var tbN=cf.tabla,pkN=cf.pk;try{if(tbN==='metrados'){if(state.meta&&state.meta[pkN])delete state.meta[pkN];if(typeof tombAdd==='function')tombAdd('metrados',pkN);if(typeof tombShareAdd==='function')tombShareAdd('metrados',pkN);store.set(KM,state.meta);if(typeof logCambio==='function')logCambio('BORRADO','metrado '+pkN,'conflicto: ninguna versión');try{renderList()}catch(_e){}}else if(tbN==='partes'){state.partes=(state.partes||[]).filter(function(z){return z.client_id!==pkN});store.set(KP,state.partes);if(typeof tombParte==='function')tombParte(pkN);try{await fetch(sbBase()+'/rest/v1/partes?client_id=eq.'+encodeURIComponent(pkN),{method:'DELETE',headers:sbHead({'Prefer':'return=minimal'})});await fetch(sbBase()+'/rest/v1/fotos?client_id=eq.'+encodeURIComponent(pkN),{method:'DELETE',headers:sbHead({'Prefer':'return=minimal'})})}catch(_e){}if(typeof logCambio==='function')logCambio('BORRADO','avance '+pkN,'conflicto: ninguna versión')}else{var pkcol=(tbN==='calendario'||tbN==='dias_habilitados')?'fecha':((tbN==='reportabilidad'||tbN==='reinicios')?'rid':((tbN==='nuevas'||tbN==='ediciones'||tbN==='programacion'||tbN==='restricciones_partida')?'partida_id':'id'));var qN=pkcol+'=eq.'+encodeURIComponent(pkN)+'&proyecto=eq.'+encodeURIComponent(DATA.proyecto);try{await fetch(sbBase()+'/rest/v1/'+tbN+'?'+qN,{method:'DELETE',headers:sbHead({'Prefer':'return=minimal'})})}catch(_e){}if(typeof logCambio==='function')logCambio('BORRADO',tbN+' '+pkN,'conflicto: ninguna versión')}}catch(_eN){}}
 if(choice==='usuario'&&cf&&cf.user_row&&cf.tabla){var row={};for(var k in cf.user_row){row[k]=cf.user_row[k]}var t=Date.now();row.updated_at=new Date(t).toISOString();if('ts' in row)row.ts=t;var tb=cf.tabla;var oc=(tb==='metrados'||tb==='nuevas'||tb==='ediciones'||tb==='programacion'||tb==='restricciones_partida')?'proyecto,partida_id':(tb==='calendario'?'proyecto,fecha':(tb==='partes'?'client_id':((tb==='reportabilidad'||tb==='reinicios')?'rid':((tb==='bitacora')?'nombre,dia':'id'))));if(typeof sbUpsert==='function')await sbUpsert(tb,[row],oc)}await fetch(sbBase()+'/rest/v1/conflictos?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:sbHead({'Content-Type':'application/json','Prefer':'return=minimal'}),body:JSON.stringify({resuelto:true,decidido:choice})});if(typeof toast==='function')toast(choice==='usuario'?'Aplicado el dato del usuario':(choice==='ninguno'?'Ambas versiones borradas ✓':'Se mantuvo el del servidor'));if(typeof updAdminBox==='function')updAdminBox();if(typeof syncNow==='function')syncNow(true)}catch(e){if(typeof toast==='function')toast('Error al resolver el conflicto')}}
 try{if($('btnConflictos'))$('btnConflictos').onclick=function(){_showConflictos()}}catch(e){}
-function updAdminBox(){var b=$('adminBox');if(!b)return;if(!esAdmin()){b.classList.add('hidden');return}b.classList.remove('hidden');try{if(typeof sbSelect==='function'&&typeof sbReady==='function'&&sbReady()&&navigator.onLine){sbSelect('conflictos','select=id&resuelto=is.false&proyecto=eq.'+encodeURIComponent(DATA.proyecto)).then(function(cf){var n=(cf||[]).length;var bc=$('btnConflictos');if(bc){bc.style.display='none';bc.textContent=(n>0?('⚠ Conflictos por resolver ('+n+')'):'✓ Conflictos de datos (0)');bc.style.background=(n>0?'#7A1A1A':'#3A5A40')}}).catch(function(){})}}catch(e){}var nR=0;Object.keys(state.repo||{}).forEach(function(id){nR+=(state.repo[id]||[]).length});try{var _np=(typeof _pendReview==='function')?_pendReview().length:0;if($('btnAprobar'))$('btnAprobar').innerHTML='✅ Aprobar cambios de supervisores'+(_np?(' ('+_np+')'):'')}catch(_e){}try{var _npp=(state.pend||[]).filter(function(x){return x&&x.tipo==='permiso'&&!x.resuelto}).length;if($('btnPermisos'))$('btnPermisos').innerHTML='\ud83e\udeaa Permisos'+(_npp?(' <b style="background:#fff;color:#6A4FB6;border-radius:999px;padding:1px 8px">'+_npp+'</b>'):'')}catch(_e){}var nT=((state.storm&&state.storm.log)||[]).length;var nG=((state.restot&&state.restot.log)||[]).length;if($('admStats'))$('admStats').textContent=(state.partes.length)+' partes · '+(state.nuevas.length)+' nuevas · '+nR+' restr/coment · '+Object.keys(state.prog||{}).length+' programadas · '+nT+' eventos tormenta · '+nG+' restr. generales';updPresencia();try{_renderDelReqs($('delReqsMain'))}catch(e){}}
+function updAdminBox(){var b=$('adminBox');if(!b)return;if(typeof _adminCorteEnsure==='function'){try{_adminCorteEnsure()}catch(e){}}if(!esAdmin()){b.classList.add('hidden');return}b.classList.remove('hidden');try{if(typeof sbSelect==='function'&&typeof sbReady==='function'&&sbReady()&&navigator.onLine){sbSelect('conflictos','select=id&resuelto=is.false&proyecto=eq.'+encodeURIComponent(DATA.proyecto)).then(function(cf){var n=(cf||[]).length;var bc=$('btnConflictos');if(bc){bc.style.display='none';bc.textContent=(n>0?('⚠ Conflictos por resolver ('+n+')'):'✓ Conflictos de datos (0)');bc.style.background=(n>0?'#7A1A1A':'#3A5A40')}}).catch(function(){})}}catch(e){}var nR=0;Object.keys(state.repo||{}).forEach(function(id){nR+=(state.repo[id]||[]).length});try{var _np=(typeof _pendReview==='function')?_pendReview().length:0;if($('btnAprobar'))$('btnAprobar').innerHTML='✅ Aprobar cambios de supervisores'+(_np?(' ('+_np+')'):'')}catch(_e){}try{var _npp=(state.pend||[]).filter(function(x){return x&&x.tipo==='permiso'&&!x.resuelto}).length;if($('btnPermisos'))$('btnPermisos').innerHTML='\ud83e\udeaa Permisos'+(_npp?(' <b style="background:#fff;color:#6A4FB6;border-radius:999px;padding:1px 8px">'+_npp+'</b>'):'')}catch(_e){}var nT=((state.storm&&state.storm.log)||[]).length;var nG=((state.restot&&state.restot.log)||[]).length;if($('admStats'))$('admStats').textContent=(state.partes.length)+' partes · '+(state.nuevas.length)+' nuevas · '+nR+' restr/coment · '+Object.keys(state.prog||{}).length+' programadas · '+nT+' eventos tormenta · '+nG+' restr. generales';updPresencia();try{_renderDelReqs($('delReqsMain'))}catch(e){}}
 async function confirmInvalidar(){if(!(typeof esAdminReal==='function'&&esAdminReal())){toast('Solo el administrador puede invalidar');return}if(!confirm('¿Seguro? Esto BORRA todos los partes, restricciones, programación, fotos, tormenta y registros de TODOS los supervisores — en la app y en la base de datos. No se puede deshacer.'))return;toast('Invalidando…');try{_sent={};localStorage.removeItem(SENTKEY)}catch(e){}state.partes=[];store.set(KP,state.partes);state.meta={};store.set(KM,state.meta);state.nuevas=[];store.set(KN,state.nuevas);state.repo={};store.set(KR,state.repo);state.edits={};store.set(KE,state.edits);state.reinicios=[];store.set(KX,state.reinicios);try{state.prog={};store.set(KPR,state.prog)}catch(e){}try{state.calend={};store.set(KCAL,state.calend)}catch(e){}try{state.storm={log:[]};store.set(KST,state.storm)}catch(e){}try{state.restot={log:[]};store.set(KRT,state.restot)}catch(e){}
   if(sbReady()&&navigator.onLine){var base=sbBase()+'/rest/v1/';var H={apikey:state.cfg.supaKey,Authorization:'Bearer '+state.cfg.supaKey,Prefer:'return=minimal'};
     try{var fs=await sbSelect('fotos','select=path');for(var i=0;i<fs.length;i++){if(fs[i].path){try{await fetch(sbBase()+'/storage/v1/object/'+FOTO_BUCKET+'/'+fotoEncPath(fs[i].path),{method:'DELETE',headers:{apikey:state.cfg.supaKey,Authorization:'Bearer '+state.cfg.supaKey}})}catch(e){}}}}catch(e){}
@@ -1655,7 +2540,7 @@ function _rtInit(){try{
  if(!window._rt)window._rt=window.supabase.createClient(sbBase(),state.cfg.supaKey,{realtime:{params:{eventsPerSecond:5}}});
  var t=null;function ding(pl){try{if(window._tabBloqueada)return;var tb=pl&&pl.table;if(tb==='roles_usuarios'&&typeof _pullRoles==='function')_pullRoles();if(t)clearTimeout(t);t=setTimeout(function(){try{if(typeof syncing==='undefined'||!syncing)syncNow(true)}catch(e){}},1800)}catch(e){}}
  var ch=window._rt.channel('obra-rt-'+Date.now());
- ['programacion','partes','fotos','metrados','borrados','pendientes','cambios','nuevas','calendario','tormenta','restricciones_generales','reportabilidad','dias_habilitados','reinicios','restricciones_partida','roles_usuarios','ediciones','app_config'].forEach(function(tb){ch.on('postgres_changes',{event:'*',schema:'public',table:tb},ding)});
+ ['programacion','partes','fotos','metrados','borrados','pendientes','cambios','nuevas','calendario','tormenta','restricciones_generales','reportabilidad','dias_habilitados','reinicios','restricciones_partida','roles_usuarios','ediciones','app_config','semanas','prog_semana','razones_noavance','avance_semana','metas_semana'].forEach(function(tb){ch.on('postgres_changes',{event:'*',schema:'public',table:tb},ding)});
  ch.subscribe(function(st){window._rtEstado=st;try{if(typeof _logAdd==='function')_logAdd('rt','canal '+st)}catch(e){}});
  window._rtCh=ch;return true;
 }catch(e){return false}}
