@@ -440,7 +440,7 @@
   <div class="pbody">
     <div class="expstat"><div class="b"><div class="v tnum" id="eN">0</div><div class="k">partes</div></div><div class="b"><div class="v tnum" id="eNew">0</div><div class="k">nuevas</div></div><div class="b"><div class="v tnum" id="eAv">0%</div><div class="k">avance real</div></div></div>
     <button class="btn btn-ghost" id="eShare">Compartir CSV</button><div style="height:10px"></div>
-    <button class="btn btn-ghost" id="eCsv">Descargar CSV</button><button class="btn btn-ghost" type="button" onclick="_showLog()" style="height:46px;margin-top:12px;width:100%">🩺 Ver Log / Diagnóstico</button><button class="btn btn-ghost" type="button" onclick="_showDispositivos()" style="height:46px;margin-top:10px;width:100%">📱 Dispositivos (admin)</button><button class="btn" type="button" onclick="backupCompleto()" style="height:46px;margin-top:10px;width:100%;background:#0B4F2E;color:#fff">💾 Back-up completo (elige carpeta en tu PC)</button><button class="btn" type="button" onclick="_fixAll()" style="height:46px;margin-top:10px;width:100%;background:#6A4FB6;color:#fff">\ud83d\udee0 FIX para todos los usuarios (admin)</button><button class="btn" type="button" onclick="_debugReset()" style="height:46px;background:#7A1A1A;color:#fff;margin-top:12px;width:100%">🧹 Borrar caché y reiniciar (debug)</button>
+    <button class="btn btn-ghost" id="eCsv">Descargar CSV</button><button class="btn btn-ghost" type="button" onclick="_showLog()" style="height:46px;margin-top:12px;width:100%">🩺 Ver Log / Diagnóstico</button><button class="btn btn-ghost" type="button" onclick="_showDispositivos()" style="height:46px;margin-top:10px;width:100%">📱 Dispositivos (admin)</button><button class="btn" type="button" onclick="backupCompleto()" style="height:46px;margin-top:10px;width:100%;background:#0B4F2E;color:#fff">💾 Back-up completo (elige carpeta en tu PC)</button><button class="btn" type="button" onclick="_fixAll()" style="height:46px;margin-top:10px;width:100%;background:#6A4FB6;color:#fff">\ud83d\udee0 FIX para todos los usuarios (admin)</button><button class="btn btn-ghost" type="button" onclick="medirRegiones()" style="height:46px;margin-top:10px;width:100%">\ud83c\udf0e Medir regiones (velocidad desde este equipo)</button><button class="btn" type="button" onclick="_debugReset()" style="height:46px;background:#7A1A1A;color:#fff;margin-top:12px;width:100%">🧹 Borrar caché y reiniciar (debug)</button>
     <div class="hint" id="cfgStatus" style="margin-top:12px"></div>
   </div>
 </div></div>
@@ -858,7 +858,7 @@ async function sbSelect(tabla,qs){var url=sbBase()+'/rest/v1/'+tabla+'?'+qs;var 
 async function sbDelete(tabla,qs){var url=sbBase()+'/rest/v1/'+tabla+'?'+qs;var r=await fetch(url,{method:'DELETE',headers:sbHead({'Prefer':'return=minimal'})});if(!r.ok&&r.status!==404)throw new Error('del '+tabla+' '+r.status)}
 function pendingCount(){return (typeof _pendAll==='function')?_pendAll():state.partes.filter(function(p){return !p.synced}).length}
 /* === FIX anti-pérdida: subir solo lo cambiado + pausar sync al editar === */
-var APP_VER='v20260702-PRUEBA-r6';try{['appVer','appVer2'].forEach(function(_ai){var _av=document.getElementById(_ai);if(_av)_av.textContent='versión '+APP_VER})}catch(_e){}
+var APP_VER='v20260702-PRUEBA-r7';try{['appVer','appVer2'].forEach(function(_ai){var _av=document.getElementById(_ai);if(_av)_av.textContent='versión '+APP_VER})}catch(_e){}
 var _SCRKEY='tst4_lastscr';var _scrSaverOn=false;
 function _visScr(){var ids=['scrList','scrPend','scrProg','scrBita','scrInvDay','scrRestot','scrAdmList','scrDiario'];for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el&&!el.classList.contains('hidden'))return ids[i]}return null}
 function _scrSave(){try{if(!(state&&state.user))return;var v=_visScr();if(!v)return;localStorage.setItem(_SCRKEY,JSON.stringify({id:v,date:(typeof activeDate!=='undefined'&&activeDate)||null}))}catch(e){}}
@@ -987,6 +987,14 @@ toast('✅ '+ns.length+' cambio(s) VALIDADOS y enviados');ns.forEach(function(n)
 }
 paint();
 }
+async function medirRegiones(){toast('\ud83c\udf0e Midiendo 5 regiones\u2026 (unos 15 s)');
+var R=[['S\u00e3o Paulo sa-east-1 (ACTUAL)','https://s3.sa-east-1.amazonaws.com/'],['Virginia us-east-1','https://s3.us-east-1.amazonaws.com/'],['Ohio us-east-2','https://s3.us-east-2.amazonaws.com/'],['Oreg\u00f3n us-west-2','https://s3.us-west-2.amazonaws.com/'],['Canad\u00e1 ca-central-1','https://s3.ca-central-1.amazonaws.com/']];
+var out=[];
+for(var i=0;i<R.length;i++){var best=null;
+ for(var j=0;j<3;j++){var t0=Date.now();try{await Promise.race([fetch(R[i][1]+'?x='+Date.now()+j,{mode:'no-cors',cache:'no-store'}),new Promise(function(_,rej){setTimeout(rej,3500)})]);var ms=Date.now()-t0;if(best==null||ms<best)best=ms}catch(e){}}
+ out.push((best!=null&&i===0?'\u2b50 ':'')+R[i][0]+': '+(best==null?'sin respuesta':best+' ms'))}
+alert('\ud83c\udf0e Velocidad desde ESTE equipo:\n\n'+out.join('\n')+'\n\nLa base vive en S\u00e3o Paulo (la regi\u00f3n no se puede cambiar en caliente; se crear\u00eda una base gemela en otra regi\u00f3n). Si otra gana por 30% o m\u00e1s TAMBI\u00c9N en los celulares de campo, vale la pena probar una base all\u00e1.');
+try{if(typeof logCambio==='function')logCambio('DIAG','regiones',out.join(' | '))}catch(e){}}
 async function _fixAll(){if(!(typeof esAdmin==='function'&&esAdmin())){toast('Solo el administrador');return}
 if(!confirm('\ud83d\udee0 FIX para todos los usuarios:\n\n1) Verifica el TIEMPO REAL de la base (tablas importantes)\n2) Re-sincroniza y reconecta este equipo\n3) Ordena a TODOS los dispositivos re-sincronizar y reconectar\n\n\u00bfContinuar?'))return;
 var msg='';
@@ -1586,18 +1594,18 @@ window.addEventListener('beforeunload',function(){try{var l2=lee();if(l2&&l2.id=
 /* === r5: semaforo de linea con umbral + contador vivo === */
 window._netQ={ms:null,estado:'?',fallos:0};
 function _pendVivo(){var n=0;try{n+=(state.partes||[]).filter(function(p){return p&&p.synced===false}).length}catch(e){}try{Object.keys(state.prog||{}).forEach(function(k){if(state.prog[k]&&state.prog[k]._lo)n++})}catch(e){}try{n+=((state.pend||[]).filter(function(x){return x&&x.synced===false})).length}catch(e){}try{n+=(((state.storm&&state.storm.log)||[]).filter(function(x){return x&&x.synced===false})).length}catch(e){}try{n+=(((state.restot&&state.restot.log)||[]).filter(function(x){return x&&x.synced===false})).length}catch(e){}return n}
-function _netUpd(){try{var el=document.getElementById('_netDot');if(!el){el=document.createElement('div');el.id='_netDot';el.style.cssText='position:fixed;top:8px;right:8px;z-index:2147483645;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:999px;box-shadow:0 1px 5px rgba(0,0,0,.25);pointer-events:none';document.body.appendChild(el)}
+function _netUpd(){try{var el=document.getElementById('_netDot');if(!el){el=document.createElement('div');el.id='_netDot';el.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2147483644;font-size:11px;font-weight:800;padding:6px 8px;text-align:center;box-shadow:0 -1px 6px rgba(0,0,0,.18);pointer-events:none;letter-spacing:.02em';document.body.appendChild(el);try{document.body.style.paddingBottom='34px'}catch(_e){}}
 var q=window._netQ;var pv=(typeof _pendVivo==='function')?_pendVivo():0;
 if(q.estado==='online'){el.style.background='#E1F4EC';el.style.color='#1E7A46';var _rtOk=(window._rtEstado==='SUBSCRIBED');el.textContent='\ud83d\udfe2 EN L\u00cdNEA'+(_rtOk?' \u26a1':'')+(q.ms!=null?(' \u00b7 '+q.ms+' ms'):'')+(pv?(' \u00b7 subiendo '+pv):'')+(_rtOk?'':' \u00b7 conectando tiempo real\u2026');
 if(!_rtOk&&(!window._rtRetry||Date.now()-window._rtRetry>30000)){window._rtRetry=Date.now();try{if(typeof _rtInit==='function')_rtInit()}catch(_e){}}}
 else if(q.estado==='debil'){el.style.background='#FCEFD9';el.style.color='#8A4B00';el.textContent='\ud83d\udfe1 SE\u00d1AL D\u00c9BIL \u2014 se guarda aqu\u00ed y sube solo'+(pv?(' ('+pv+' en cola)'):'')}
 else if(q.estado==='offline'){el.style.background='#FBE7E3';el.style.color='#B42318';el.textContent='\ud83d\udd34 SIN SE\u00d1AL \u2014 nada se pierde: sube al volver'+(pv?(' ('+pv+' en cola)'):'')}
-else{el.textContent='';el.style.background='transparent'}}catch(e){}}
+else{el.textContent='';el.style.background='transparent'}try{var tsn=document.getElementById('topSync');if(tsn){var _rtOk2=(window._rtEstado==='SUBSCRIBED')&&q.estado==='online';tsn.style.display=_rtOk2?'none':''}}catch(_e2){}}catch(e){}}
 function _netMide(){var t0=Date.now();return Promise.race([fetch(sbBase()+'/auth/v1/health',{headers:{apikey:state.cfg.supaKey},cache:'no-store'}),new Promise(function(_,rej){setTimeout(function(){rej(new Error('t'))},4000)})]).then(function(){return Date.now()-t0})}
 function _netPing(){try{
 if(!navigator.onLine){window._netQ.estado='offline';window._netQ.ms=null;_netUpd();return}
 _netMide().then(function(m1){return _netMide().then(function(m2){return Math.min(m1,m2)}).catch(function(){return m1})})
-.then(function(ms){var h=window._netQ.hist=(window._netQ.hist||[]);h.push(ms);if(h.length>3)h.shift();var best=Math.min.apply(null,h);window._netQ.ms=best;window._netQ.fallos=0;window._netQ.estado=(best<1200)?'online':'debil';_netUpd()})
+.then(function(ms){var h=window._netQ.hist=(window._netQ.hist||[]);h.push(ms);if(h.length>3)h.shift();var best=Math.min.apply(null,h);window._netQ.ms=best;window._netQ.fallos=0;window._netQ.estado=(best<=280)?'online':'debil';_netUpd()})
 .catch(function(){window._netQ.fallos++;window._netQ.ms=null;window._netQ.hist=[];window._netQ.estado=(window._netQ.fallos>=2)?'offline':'debil';_netUpd()})
 }catch(e){}}
 setInterval(_netPing,15000);setTimeout(_netPing,2500);setInterval(_netUpd,5000);
