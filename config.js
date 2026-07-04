@@ -1,8 +1,6 @@
-/* === Conexión a Supabase (Oregón · us-west-2) — AMBIENTE DE PRUEBAS ===
-   /test/ ahora sirve la página de obra-feable (São Paulo) PERO apuntando a la
-   base de PRUEBAS obra-test-oregon, para NO tocar la base real de producción.
-   Prefijo local tst4_ (aislado de la oficial sgto4_). */
+/* === Conexión a Supabase (Oregón · us-west-2) — base COLUMBITO (dedicada) ===
+   mytrrdjiqtznkiizqehh · clon 100%% de obra-test-oregon. Llave publishable (pública). */
 window.SUPA_CFG = {
-  url: "https://lotfscfgkgsnqwwnftoo.supabase.co",
-  key: "sb_publishable_1PFZ1zZjhhEthjkFFdI7rQ_uuPB0kaF"
+  url: "https://mytrrdjiqtznkiizqehh.supabase.co",
+  key: "sb_publishable_GxNitjiHu8LMBaPdGa4fRA_rwE-THDq"
 };
