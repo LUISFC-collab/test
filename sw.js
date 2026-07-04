@@ -1,7 +1,7 @@
 /* Service worker — Parte de obra (Water Transition II)
    Guarda la app en el telefono y la abre SIN conexion, pero SIEMPRE trae la version
    mas nueva cuando hay internet. Cambia CACHE en cada despliegue para no servir data vieja. */
-const CACHE = 'obra-test-v20260703-PRUEBA-r18';
+const CACHE = 'obra-test-v20260701z61-oregon';
 const SHELL = ['./', './index.html', './config.js', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function (e) {
